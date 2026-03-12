@@ -640,38 +640,27 @@ transition: all 0.2s;
   });
 
   function drawBlackboard(ctx) {
-    const x = bb.offsetLeft, y = bb.offsetTop;
-    const w = bb.offsetWidth;
+    // DOMの実際のサイズ・位置をそのまま使う
+    const rect = bb.getBoundingClientRect();
+    const x = Math.round(rect.left);
+    const y = Math.round(rect.top);
+    const w = Math.round(rect.width);
+    const h = Math.round(rect.height);
     const opacity = parseFloat(bb.style.opacity || 1);
-
-    const titleH = 22;
-    const labelW = 52;
-    const bigH = 42;   // 作業項目
-    const normH = 26;  // その他の行
-
-    const companyName = getCompanyName();
-    const fields = [
-      { label:'作業項目',  val: document.getElementById('f-work').textContent, h: bigH },
-      { label:'現場名',    val: document.getElementById('f-site').textContent,  h: normH },
-      { label:'施工業者名', val: companyName,                                   h: normH },
-      { label:'日　付',    val: document.getElementById('f-date').textContent,  h: normH },
-    ];
-
-    // 黒板全体の高さをコンテンツから計算
-    const totalH = titleH + fields.reduce((s, f) => s + f.h, 0);
 
     ctx.save();
     ctx.globalAlpha = opacity;
 
-    // 背景（ぴったりサイズ）
+    // 背景：DOMと同じサイズだけ塗る
     ctx.fillStyle = '#2d5a27';
-    ctx.fillRect(x, y, w, totalH);
+    ctx.fillRect(x, y, w, h);
 
     // 外枠
     ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5;
-    ctx.strokeRect(x + 1.25, y + 1.25, w - 2.5, totalH - 2.5);
+    ctx.strokeRect(x + 1.25, y + 1.25, w - 2.5, h - 2.5);
 
-    // タイトル行
+    // タイトル
+    const titleH = 22;
     ctx.fillStyle = 'rgba(0,0,0,0.25)';
     ctx.fillRect(x, y, w, titleH);
     ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
@@ -681,33 +670,47 @@ transition: all 0.2s;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText('工　事　黒　板', x + w / 2, y + titleH / 2);
 
-    // 各フィールド行
-    let fy = y + titleH;
-    fields.forEach(f => {
+    // 各行をDOMの実サイズから取得して描画
+    const labelW = 52;
+    const rowEls = bb.querySelectorAll('.field-row');
+    rowEls.forEach(rowEl => {
+      const rRect = rowEl.getBoundingClientRect();
+      const ry = Math.round(rRect.top);
+      const rh = Math.round(rRect.height);
+
+      // ラベルとvalueを取得
+      const labelEl = rowEl.querySelector('.field-label');
+      const valEl   = rowEl.querySelector('.field-value, .company-wrapper');
+      const labelTxt = labelEl ? labelEl.textContent.trim() : '';
+      let   valTxt   = '';
+      if(rowEl.querySelector('.company-wrapper')) {
+        valTxt = getCompanyName();
+      } else if(valEl) {
+        valTxt = valEl.textContent.trim();
+      }
+
       // 区切り線（上）
       ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(x, fy); ctx.lineTo(x + w, fy); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x, ry); ctx.lineTo(x + w, ry); ctx.stroke();
 
       // ラベル背景
       ctx.fillStyle = 'rgba(0,0,0,0.2)';
-      ctx.fillRect(x, fy, labelW, f.h);
+      ctx.fillRect(x, ry, labelW, rh);
 
       // ラベル縦区切り
       ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(x + labelW, fy); ctx.lineTo(x + labelW, fy + f.h); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x + labelW, ry); ctx.lineTo(x + labelW, ry + rh); ctx.stroke();
 
       // ラベル文字
       ctx.fillStyle = '#fff';
       ctx.font = '700 9px "Noto Sans JP", sans-serif';
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(f.label, x + labelW / 2, fy + f.h / 2);
+      ctx.fillText(labelTxt, x + labelW / 2, ry + rh / 2);
 
       // 値
       ctx.font = '500 10px "Noto Sans JP", sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText(f.val, x + labelW + 6, fy + f.h / 2);
-
-      fy += f.h;
+      ctx.fillText(valTxt, x + labelW + 6, ry + rh / 2);
     });
 
     ctx.restore();
