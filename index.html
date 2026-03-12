@@ -456,7 +456,7 @@ transition: all 0.2s;
   <div id="start-screen">
     <h1>現場黒板</h1>
     <p>工事写真撮影アプリ</p>
-    <button id="start-btn" onclick="startCamera()">カメラを起動する</button>
+    <button id="start-btn">カメラを起動する</button>
   </div>
 
   <!-- プレビュー -->
@@ -464,8 +464,8 @@ transition: all 0.2s;
   <div id="preview-overlay">
     <img id="preview-img" alt="撮影プレビュー">
     <div id="preview-btns">
-      <button class="preview-btn" onclick="closePreview()">撮り直す</button>
-      <button class="preview-btn primary" onclick="savePhoto()">保存する</button>
+      <button class="preview-btn" id="retake-btn">撮り直す</button>
+      <button class="preview-btn primary" id="save-btn">保存する</button>
     </div>
   </div>
 </div>
@@ -520,6 +520,11 @@ transition: all 0.2s;
       alert('カメラへのアクセスが許可されていません。\n設定からカメラの使用を許可してください。');
     }
   }
+
+  // ボタンイベント登録（onclick属性を使わない）
+  document.getElementById('start-btn').addEventListener('click', startCamera);
+  document.getElementById('retake-btn').addEventListener('click', closePreview);
+  document.getElementById('save-btn').addEventListener('click', savePhoto);
 
   document.getElementById('flip-btn').addEventListener('click', async () => {
     facingMode = facingMode === 'environment' ? 'user' : 'environment';
