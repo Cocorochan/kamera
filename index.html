@@ -82,11 +82,10 @@ display: flex;
 border: 0;
 border-top: 1.5px solid rgba(255,255,255,0.85);
 margin-bottom: 0;
-min-height: 28px;
 }
 
 /* 作業項目は高さ大きめ */
-.field-row.row-work { min-height: 46px; }
+.field-row.row-work .field-value { min-height: 42px; }
 
 .field-row:last-child { margin-bottom: 0; }
 
@@ -113,7 +112,7 @@ white-space: pre-line;
 flex: 1;
 color: #fff;
 font-size: 10px;
-padding: 2px 5px;
+padding: 5px 5px;
 display: flex;
 align-items: center;
 word-break: break-all;
@@ -124,7 +123,6 @@ font-weight: 500;
 outline: none;
 background: transparent;
 cursor: text;
-min-height: 26px;
 }
 
 .field-value[contenteditable=“true”]:empty::before {
