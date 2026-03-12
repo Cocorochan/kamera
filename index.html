@@ -39,197 +39,165 @@ display: block;
 /* ── 黒板 ── */
 #blackboard {
 position: absolute;
-width: 280px;
+width: 300px;
 display: inline-flex;
 flex-direction: column;
 background: #2d5a27;
 border: 2.5px solid #fff;
-border-radius: 3px;
+border-radius: 2px;
 cursor: grab;
-top: 60px;
-left: 24px;
+top: 60px; left: 20px;
 touch-action: none;
 z-index: 10;
-box-shadow:
-inset 0 0 24px rgba(0,0,0,0.3),
-0 4px 20px rgba(0,0,0,0.6),
-2px 2px 0 rgba(255,255,255,0.1);
+box-shadow: 0 4px 20px rgba(0,0,0,0.6);
 }
 
-#blackboard.dragging {
-cursor: grabbing;
-opacity: 0.92;
-box-shadow: inset 0 0 24px rgba(0,0,0,0.3), 0 12px 40px rgba(0,0,0,0.8);
-}
+#blackboard.dragging { cursor: grabbing; opacity: .92; }
 
-.board-title {
-background: rgba(0,0,0,0.25);
-text-align: center;
-padding: 5px 6px;
-border-bottom: 1.5px solid #fff;
-font-family: ‘Noto Serif JP’, serif;
-font-size: 10px;
-font-weight: 600;
-color: #fff;
-letter-spacing: 2px;
-text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-}
-
-.board-fields { padding: 0; flex: 1; display: flex; flex-direction: column; }
-
-.field-row {
+/* タイトルなし・上2行 */
+.bb-top-row {
 display: flex;
-border: 0;
-border-top: 1.5px solid rgba(255,255,255,0.85);
-margin-bottom: 0;
+border-bottom: 1.5px solid #fff;
 }
 
-/* 作業項目は高さ大きめ */
-.field-row.row-work .field-value { min-height: 42px; }
-
-.field-row:last-child { margin-bottom: 0; }
-
-.field-label {
-background: rgba(0,0,0,0.2);
-color: #fff;
-font-size: 8px;
-font-weight: 700;
-padding: 2px 0;
+/* 中央大エリア */
+.bb-center {
+border-bottom: 1.5px solid #fff;
+min-height: 80px;
 display: flex;
 align-items: center;
 justify-content: center;
-min-width: 52px;
-max-width: 52px;
-border-right: 1.5px solid rgba(255,255,255,0.85);
-letter-spacing: 0.5px;
-line-height: 1.3;
-text-align: center;
-text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
-white-space: pre-line;
+position: relative;
 }
 
-.field-value {
-flex: 1;
+.bb-center-text {
 color: #fff;
-font-size: 10px;
-padding: 5px 5px;
-display: flex;
-align-items: center;
-word-break: break-all;
-line-height: 1.4;
-text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-font-family: ‘Noto Sans JP’, sans-serif;
-font-weight: 500;
+font-size: 20px;
+font-weight: 700;
+text-align: center;
+padding: 10px 8px 4px;
 outline: none;
 background: transparent;
 cursor: text;
+width: 100%;
+text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+word-break: break-all;
+line-height: 1.5;
+display: flex; align-items: center; justify-content: center;
 }
 
-.field-value[contenteditable=“true”]:empty::before {
+.bb-center-text[contenteditable=“true”]:empty::before {
 content: attr(data-placeholder);
-color: rgba(255,255,255,0.35);
+color: rgba(255,255,255,0.3);
 font-style: italic;
-font-size: 9px;
+font-size: 12px;
 }
 
-.field-value.readonly { cursor: default; }
+/* 下部行（施工業者・日付） */
+.bb-bottom-row {
+display: flex;
+border-top: 1.5px solid #fff;
+}
 
-/* 業者名セレクト行 */
-.company-wrapper {
+/* 共通ラベル */
+.bb-label {
+background: rgba(0,0,0,0.2);
+color: #fff;
+font-size: 9px;
+font-weight: 700;
+padding: 4px 2px;
+display: flex;
+align-items: center;
+justify-content: center;
+min-width: 58px; max-width: 58px;
+border-right: 1.5px solid #fff;
+text-align: center;
+line-height: 1.3;
+text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+letter-spacing: 0.5px;
+}
+
+/* 共通値エリア */
+.bb-val {
+flex: 1;
+color: #fff;
+font-size: 11px;
+font-weight: 500;
+padding: 4px 7px;
+display: flex;
+align-items: center;
+outline: none;
+background: transparent;
+cursor: text;
+word-break: break-all;
+line-height: 1.4;
+text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.bb-val[contenteditable=“true”]:empty::before {
+content: attr(data-placeholder);
+color: rgba(255,255,255,0.3);
+font-style: italic; font-size: 10px;
+}
+
+.bb-val.readonly { cursor: default; }
+
+/* 施工業者ラジオ */
+.bb-company-wrap {
 flex: 1;
 display: flex;
 flex-direction: column;
 justify-content: center;
-padding: 2px 5px;
+padding: 3px 6px;
 gap: 2px;
 }
 
-/* ラジオボタン風セレクタ */
-.company-options {
-display: flex;
-flex-direction: column;
-gap: 2px;
+.bb-co-options { display: flex; flex-direction: column; gap: 2px; }
+
+.bb-co-opt {
+display: flex; align-items: center; gap: 5px; cursor: pointer;
 }
 
-.company-option {
-display: flex;
-align-items: center;
-gap: 4px;
-cursor: pointer;
-}
-
-.company-option input[type=“radio”] {
-appearance: none;
--webkit-appearance: none;
-width: 8px;
-height: 8px;
-border: 1.5px solid rgba(255,255,255,0.7);
-border-radius: 50%;
-flex-shrink: 0;
-cursor: pointer;
-position: relative;
+.bb-co-opt input[type=“radio”] {
+appearance: none; -webkit-appearance: none;
+width: 8px; height: 8px;
+border: 1.5px solid rgba(255,255,255,0.75);
+border-radius: 50%; flex-shrink: 0; cursor: pointer;
 transition: background .15s;
 }
 
-.company-option input[type=“radio”]:checked {
-background: #fff;
-border-color: #fff;
+.bb-co-opt input[type=“radio”]:checked { background: #fff; border-color: #fff; }
+
+.bb-co-opt label {
+font-size: 10px; color: #fff; cursor: pointer;
+font-weight: 500; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+line-height: 1.4;
 }
 
-.company-option label {
-font-size: 9px;
-color: #fff;
-cursor: pointer;
-font-weight: 500;
-text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-white-space: nowrap;
-overflow: hidden;
-text-overflow: ellipsis;
-max-width: 130px;
-line-height: 1.3;
-}
-
-/* その他の手入力エリア */
 #company-other-input {
 display: none;
 background: rgba(255,255,255,0.12);
 border: 1px solid rgba(255,255,255,0.5);
 border-radius: 2px;
-color: #fff;
-font-size: 9px;
+color: #fff; font-size: 10px;
 font-family: ‘Noto Sans JP’, sans-serif;
-padding: 2px 5px;
-outline: none;
-width: 100%;
-margin-top: 2px;
+padding: 2px 5px; outline: none; width: 100%;
 }
 
-#company-other-input::placeholder {
-color: rgba(255,255,255,0.35);
-font-style: italic;
-}
-
-#company-other-input:focus {
-border-color: rgba(255,255,255,0.8);
-background: rgba(255,255,255,0.18);
-}
+#company-other-input::placeholder { color: rgba(255,255,255,0.35); font-style: italic; }
+#company-other-input:focus { border-color: rgba(255,255,255,0.8); }
 
 /* リサイズハンドル */
 #resize-handle {
-position: absolute;
-bottom: 0; right: 0;
+position: absolute; bottom: 0; right: 0;
 width: 16px; height: 16px;
-cursor: se-resize;
-touch-action: none;
+cursor: se-resize; touch-action: none;
 }
-
 #resize-handle::after {
-content: ‘’;
-position: absolute;
-bottom: 3px; right: 3px;
+content: ‘’; position: absolute; bottom: 3px; right: 3px;
 width: 8px; height: 8px;
-border-right: 2px solid rgba(255,255,255,0.6);
-border-bottom: 2px solid rgba(255,255,255,0.6);
+border-right: 2px solid rgba(255,255,255,0.55);
+border-bottom: 2px solid rgba(255,255,255,0.55);
 }
 
 /* UI オーバーレイ */
@@ -388,48 +356,50 @@ transition: all 0.2s;
   <!-- 黒板 -->
 
   <div id="blackboard">
-    <div class="board-title">工　事　黒　板</div>
-    <div class="board-fields">
 
 ```
-  <div class="field-row row-work">
-    <div class="field-label">作業項目</div>
-    <div class="field-value" contenteditable="true" data-placeholder="入力" id="f-work" style="font-size:11px; align-items:flex-start; padding-top:5px;"></div>
-  </div>
+<!-- 上2行：作業項目・現場名 -->
+<div class="bb-top-row">
+  <div class="bb-label">作業項目</div>
+  <div class="bb-val" contenteditable="true" data-placeholder="入力" id="f-work"></div>
+</div>
+<div class="bb-top-row">
+  <div class="bb-label">現場名</div>
+  <div class="bb-val" contenteditable="true" data-placeholder="入力" id="f-site"></div>
+</div>
 
-  <div class="field-row">
-    <div class="field-label">現場名</div>
-    <div class="field-value" contenteditable="true" data-placeholder="入力" id="f-site"></div>
-  </div>
+<!-- 中央大エリア（フリー記述） -->
+<div class="bb-center">
+  <div class="bb-center-text" contenteditable="true" data-placeholder="作業内容" id="f-main"></div>
+</div>
 
-  <!-- 施工業者名：選択式 -->
-  <div class="field-row">
-    <div class="field-label">施工業者名</div>
-    <div class="company-wrapper">
-      <div class="company-options">
-        <label class="company-option">
-          <input type="radio" name="company" value="井上電工株式会社" id="co1">
-          <label for="co1">井上電工株式会社</label>
-        </label>
-        <label class="company-option">
-          <input type="radio" name="company" value="(株)山産" id="co2">
-          <label for="co2">(株)山産</label>
-        </label>
-        <label class="company-option">
-          <input type="radio" name="company" value="other" id="co3">
-          <label for="co3">その他</label>
-        </label>
+<!-- 下部：施工業者名 -->
+<div class="bb-bottom-row">
+  <div class="bb-label">施工業者名</div>
+  <div class="bb-company-wrap">
+    <div class="bb-co-options">
+      <div class="bb-co-opt">
+        <input type="radio" name="company" value="井上電工株式会社" id="co1">
+        <label for="co1">井上電工株式会社</label>
       </div>
-      <input type="text" id="company-other-input" placeholder="業者名を入力">
+      <div class="bb-co-opt">
+        <input type="radio" name="company" value="(株)山産" id="co2">
+        <label for="co2">(株)山産</label>
+      </div>
+      <div class="bb-co-opt">
+        <input type="radio" name="company" value="other" id="co3">
+        <label for="co3">その他</label>
+      </div>
     </div>
+    <input type="text" id="company-other-input" placeholder="業者名を入力">
   </div>
+</div>
 
-  <div class="field-row" style="position:relative;">
-    <div class="field-label">日　付</div>
-    <div class="field-value readonly" id="f-date"></div>
-    <div id="resize-handle"></div>
-  </div>
-
+<!-- 下部：日付 -->
+<div class="bb-bottom-row" style="position:relative;">
+  <div class="bb-label">日　付</div>
+  <div class="bb-val readonly" id="f-date"></div>
+  <div id="resize-handle"></div>
 </div>
 ```
 
@@ -644,21 +614,26 @@ transition: all 0.2s;
     const y = bb.offsetTop;
     const w = bb.offsetWidth;
     const opacity = parseFloat(bb.style.opacity || 1);
-    const labelW = 52;
+    const LW = 58; // ラベル幅
 
-    // タイトルと各行の実際のoffsetHeightを測る
-    const titleEl = bb.querySelector('.board-title');
-    const titleH  = titleEl ? titleEl.offsetHeight : 22;
-    const rowEls  = Array.from(bb.querySelectorAll('.field-row'));
-    const rowHeights = rowEls.map(r => r.offsetHeight);
+    // 各エリアの実際の高さをDOMから取得
+    const rowWork    = bb.querySelector('.bb-top-row:nth-child(1)');
+    const rowSite    = bb.querySelector('.bb-top-row:nth-child(2)');
+    const rowCenter  = bb.querySelector('.bb-center');
+    const rowCompany = bb.querySelector('.bb-bottom-row:nth-child(4)');
+    const rowDate    = bb.querySelector('.bb-bottom-row:nth-child(5)');
 
-    // 黒板の正確な高さ = タイトル + 全行の合計
-    const totalH = titleH + rowHeights.reduce((s, h) => s + h, 0);
+    const hWork    = rowWork    ? rowWork.offsetHeight    : 26;
+    const hSite    = rowSite    ? rowSite.offsetHeight    : 26;
+    const hCenter  = rowCenter  ? rowCenter.offsetHeight  : 80;
+    const hCompany = rowCompany ? rowCompany.offsetHeight : 50;
+    const hDate    = rowDate    ? rowDate.offsetHeight    : 26;
+    const totalH   = hWork + hSite + hCenter + hCompany + hDate;
 
     ctx.save();
     ctx.globalAlpha = opacity;
 
-    // 背景：計算した高さだけ塗る
+    // 背景
     ctx.fillStyle = '#2d5a27';
     ctx.fillRect(x, y, w, totalH);
 
@@ -666,61 +641,62 @@ transition: all 0.2s;
     ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5;
     ctx.strokeRect(x + 1.25, y + 1.25, w - 2.5, totalH - 2.5);
 
-    // タイトル帯
-    ctx.fillStyle = 'rgba(0,0,0,0.25)';
-    ctx.fillRect(x, y, w, titleH);
+    // ─ 作業項目行 ─
+    let ry = y;
+    drawLabelRow(ctx, x, ry, w, hWork, LW, '作業項目',
+      document.getElementById('f-work').textContent, false);
+
+    // ─ 現場名行 ─
+    ry += hWork;
     ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.moveTo(x, y + titleH); ctx.lineTo(x + w, y + titleH); ctx.stroke();
-    ctx.fillStyle = '#fff';
-    ctx.font = '600 10px "Noto Serif JP", serif';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('工　事　黒　板', x + w / 2, y + titleH / 2);
+    ctx.beginPath(); ctx.moveTo(x, ry); ctx.lineTo(x + w, ry); ctx.stroke();
+    drawLabelRow(ctx, x, ry, w, hSite, LW, '現場名',
+      document.getElementById('f-site').textContent, false);
 
-    // 各行
-    let fy = y + titleH;
-    rowEls.forEach((rowEl, i) => {
-      const rh = rowHeights[i];
-
-      // ラベルテキスト取得
-      const labelEl  = rowEl.querySelector('.field-label');
-      const labelTxt = labelEl ? labelEl.textContent.trim() : '';
-
-      // 値テキスト取得
-      let valTxt = '';
-      if (rowEl.querySelector('.company-wrapper')) {
-        valTxt = getCompanyName();
-      } else {
-        const valEl = rowEl.querySelector('.field-value');
-        valTxt = valEl ? valEl.textContent.trim() : '';
-      }
-
-      // 上区切り線
-      ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(x, fy); ctx.lineTo(x + w, fy); ctx.stroke();
-
-      // ラベル背景
-      ctx.fillStyle = 'rgba(0,0,0,0.2)';
-      ctx.fillRect(x, fy, labelW, rh);
-
-      // ラベル縦区切り線
-      ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(x + labelW, fy); ctx.lineTo(x + labelW, fy + rh); ctx.stroke();
-
-      // ラベル文字
+    // ─ 中央大エリア ─
+    ry += hSite;
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(x, ry); ctx.lineTo(x + w, ry); ctx.stroke();
+    const mainText = document.getElementById('f-main').textContent;
+    if (mainText) {
       ctx.fillStyle = '#fff';
-      ctx.font = '700 9px "Noto Sans JP", sans-serif';
+      ctx.font = `700 ${Math.round(w * 0.065)}px "Noto Sans JP", sans-serif`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(labelTxt, x + labelW / 2, fy + rh / 2);
+      ctx.fillText(mainText, x + w / 2, ry + hCenter / 2);
+    }
 
-      // 値文字
-      ctx.font = '500 10px "Noto Sans JP", sans-serif';
-      ctx.textAlign = 'left';
-      ctx.fillText(valTxt, x + labelW + 6, fy + rh / 2);
+    // ─ 施工業者名行 ─
+    ry += hCenter;
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(x, ry); ctx.lineTo(x + w, ry); ctx.stroke();
+    drawLabelRow(ctx, x, ry, w, hCompany, LW, '施工業者名', getCompanyName(), false);
 
-      fy += rh;
-    });
+    // ─ 日付行 ─
+    ry += hCompany;
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(x, ry); ctx.lineTo(x + w, ry); ctx.stroke();
+    drawLabelRow(ctx, x, ry, w, hDate, LW, '日　付',
+      document.getElementById('f-date').textContent, false);
 
     ctx.restore();
+  }
+
+  function drawLabelRow(ctx, x, y, w, h, lw, label, val) {
+    // ラベル背景
+    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    ctx.fillRect(x, y, lw, h);
+    // ラベル縦区切り
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(x + lw, y); ctx.lineTo(x + lw, y + h); ctx.stroke();
+    // ラベル文字
+    ctx.fillStyle = '#fff';
+    ctx.font = '700 9px "Noto Sans JP", sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(label, x + lw / 2, y + h / 2);
+    // 値
+    ctx.font = '500 11px "Noto Sans JP", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(val, x + lw + 6, y + h / 2);
   }
 
   function closePreview() {
