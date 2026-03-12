@@ -39,7 +39,7 @@ display: block;
 /* ── 黒板 ── */
 #blackboard {
 position: absolute;
-width: 240px; /* 小さめに変更 */
+width: 360px; /* 横長 */
 background: #2d5a27;
 border: 2.5px solid #fff;
 border-radius: 3px;
@@ -77,14 +77,18 @@ letter-spacing: 2px;
 text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
 }
 
-.board-fields { padding: 6px 8px 8px; }
+.board-fields { padding: 0; }
 
 .field-row {
 display: flex;
-border: 1.5px solid rgba(255,255,255,0.85);
-margin-bottom: 5px;
+border: 0;
+border-top: 1.5px solid rgba(255,255,255,0.85);
+margin-bottom: 0;
 min-height: 28px;
 }
+
+/* 作業項目は高さ大きめ */
+.field-row.row-work { min-height: 46px; }
 
 .field-row:last-child { margin-bottom: 0; }
 
@@ -93,12 +97,12 @@ background: rgba(0,0,0,0.2);
 color: #fff;
 font-size: 8px;
 font-weight: 700;
-padding: 3px 4px;
+padding: 2px 0;
 display: flex;
 align-items: center;
 justify-content: center;
-min-width: 54px;
-max-width: 54px;
+min-width: 52px;
+max-width: 52px;
 border-right: 1.5px solid rgba(255,255,255,0.85);
 letter-spacing: 0.5px;
 line-height: 1.3;
@@ -111,7 +115,7 @@ white-space: pre-line;
 flex: 1;
 color: #fff;
 font-size: 10px;
-padding: 3px 6px;
+padding: 2px 5px;
 display: flex;
 align-items: center;
 word-break: break-all;
@@ -140,8 +144,8 @@ flex: 1;
 display: flex;
 flex-direction: column;
 justify-content: center;
-padding: 3px 6px;
-gap: 3px;
+padding: 2px 5px;
+gap: 2px;
 }
 
 /* ラジオボタン風セレクタ */
@@ -392,9 +396,9 @@ transition: all 0.2s;
     <div class="board-fields">
 
 ```
-  <div class="field-row">
+  <div class="field-row row-work">
     <div class="field-label">作業項目</div>
-    <div class="field-value" contenteditable="true" data-placeholder="入力" id="f-work"></div>
+    <div class="field-value" contenteditable="true" data-placeholder="入力" id="f-work" style="font-size:11px; align-items:flex-start; padding-top:5px;"></div>
   </div>
 
   <div class="field-row">
@@ -523,7 +527,7 @@ transition: all 0.2s;
   });
 
   // サイズ切替
-  const sizes = [{w:180,label:'小'},{w:240,label:'中'},{w:320,label:'大'}];
+  const sizes = [{w:260,label:'小'},{w:360,label:'中'},{w:460,label:'大'}];
   let sizeIdx = 1;
   document.getElementById('size-btn').addEventListener('click', () => {
     sizeIdx = (sizeIdx+1) % sizes.length;
@@ -676,36 +680,45 @@ transition: all 0.2s;
     // フィールドデータ
     const companyName = getCompanyName();
     const fields = [
-      { label:'作業項目', val: document.getElementById('f-work').textContent },
-      { label:'現場名',   val: document.getElementById('f-site').textContent },
-      { label:'施工業者名', val: companyName },
-      { label:'日　付',   val: document.getElementById('f-date').textContent },
+      { label:'作業項目', val: document.getElementById('f-work').textContent, big: true },
+      { label:'現場名',   val: document.getElementById('f-site').textContent, big: false },
+      { label:'施工業者名', val: companyName, big: false },
+      { label:'日　付',   val: document.getElementById('f-date').textContent, big: false },
     ];
 
-    let fy = y + titleH + 6;
-    const pad = 8, labelW = 54, rowH = 28;
+    let fy = y + titleH;
+    const labelW = 52;
+    const normalH = 28, bigH = 46;
 
     fields.forEach(f => {
+      const rowH = f.big ? bigH : normalH;
+
+      // 行の背景（なし、緑のまま）
+      // 上の区切り線
       ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.lineWidth = 1.5;
-      ctx.strokeRect(x+pad, fy, w-pad*2, rowH);
+      ctx.beginPath(); ctx.moveTo(x, fy); ctx.lineTo(x+w, fy); ctx.stroke();
 
+      // ラベル背景
       ctx.fillStyle = 'rgba(0,0,0,0.2)';
-      ctx.fillRect(x+pad, fy, labelW, rowH);
+      ctx.fillRect(x, fy, labelW, rowH);
 
+      // ラベル区切り線
       ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.moveTo(x+pad+labelW, fy); ctx.lineTo(x+pad+labelW, fy+rowH); ctx.stroke();
+      ctx.moveTo(x+labelW, fy); ctx.lineTo(x+labelW, fy+rowH); ctx.stroke();
 
+      // ラベルテキスト
       ctx.fillStyle = '#fff';
       ctx.font = '700 8px "Noto Sans JP", sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(f.label, x+pad+labelW/2, fy+rowH/2+3);
+      ctx.fillText(f.label, x+labelW/2, fy+rowH/2+3);
 
-      ctx.font = '500 9px "Noto Sans JP", sans-serif';
+      // 値テキスト
+      ctx.font = f.big ? '500 11px "Noto Sans JP", sans-serif' : '500 9px "Noto Sans JP", sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText(f.val, x+pad+labelW+6, fy+rowH/2+3);
+      ctx.fillText(f.val, x+labelW+5, fy+rowH/2+3);
 
-      fy += rowH + 5;
+      fy += rowH;
     });
 
     ctx.restore();
