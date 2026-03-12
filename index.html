@@ -9,190 +9,115 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-
-body {
-font-family: ‘Noto Sans JP’, sans-serif;
-background: #111;
-overflow: hidden;
-height: 100vh; width: 100vw;
-user-select: none;
-}
-
-#camera-container {
-position: relative;
-width: 100vw; height: 100vh;
-overflow: hidden;
-}
-
+body { font-family:'Noto Sans JP',sans-serif; background:#111; overflow:hidden; height:100vh; width:100vw; user-select:none; }
+#camera-container { position:relative; width:100vw; height:100vh; overflow:hidden; }
 #video { width:100%; height:100%; object-fit:cover; display:block; }
 #canvas { display:none; }
 
-/* =====================
-黒板
-===================== */
+/* ====== 黒板 ====== */
 #blackboard {
-position: absolute;
-top: 60px; left: 16px;
-width: 310px;
-z-index: 10;
-cursor: grab;
-touch-action: none;
-/* 黒板の緑背景 */
-background: #2b5f35;
-border: 3px solid #e0e0e0;
-box-shadow: 0 3px 16px rgba(0,0,0,0.6);
+position:absolute; top:55px; left:16px; width:310px;
+z-index:10; cursor:grab; touch-action:none;
+background:#2b5f35;
+border:3px solid #ddd;
+box-shadow:0 3px 16px rgba(0,0,0,.6);
 }
+#blackboard.dragging { cursor:grabbing; opacity:.9; }
 
-#blackboard.dragging { cursor: grabbing; opacity: .9; }
-
-/* 全セル共通 */
+/* 行共通 */
 .bb-row {
-display: flex;
-border-bottom: 2px solid #e0e0e0;
+display:flex;
+border-bottom:2px solid #ddd;
 }
-.bb-row:last-child { border-bottom: none; }
 
+/* ラベル列 */
 .bb-lbl {
-width: 70px;
-min-width: 70px;
-background: rgba(0,0,0,0.18);
-border-right: 2px solid #e0e0e0;
-color: #fff;
-font-size: 10px;
-font-weight: 700;
-display: flex;
-align-items: center;
-justify-content: center;
-text-align: center;
-line-height: 1.4;
-letter-spacing: 0.5px;
-text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-padding: 4px 2px;
+width:62px; min-width:62px;
+background:rgba(0,0,0,.2);
+border-right:2px solid #ddd;
+color:#fff; font-size:10px; font-weight:700;
+display:flex; align-items:center; justify-content:center;
+text-align:center; line-height:1.4; letter-spacing:.5px;
+padding:5px 2px;
+text-shadow:1px 1px 2px rgba(0,0,0,.5);
 }
 
+/* 値列 */
 .bb-val {
-flex: 1;
-color: #fff;
-font-size: 12px;
-font-weight: 500;
-padding: 5px 8px;
-display: flex;
-align-items: center;
-outline: none;
-background: transparent;
-cursor: text;
-word-break: break-all;
-line-height: 1.5;
-text-shadow: 1px 1px 2px rgba(0,0,0,0.35);
+flex:1; color:#fff; font-size:12px; font-weight:500;
+padding:5px 8px; display:flex; align-items:center;
+outline:none; background:transparent; cursor:text;
+word-break:break-all; line-height:1.5;
+text-shadow:1px 1px 2px rgba(0,0,0,.35);
 }
-
 .bb-val[contenteditable]:empty::before {
-content: attr(data-ph);
-color: rgba(255,255,255,0.3);
-font-style: italic;
-font-size: 10px;
+content:attr(data-ph); color:rgba(255,255,255,.28); font-style:italic; font-size:10px;
 }
 
-/* 中央大エリア */
-.bb-center {
-border-bottom: 2px solid #e0e0e0;
-min-height: 90px;
-display: flex;
-align-items: center;
-justify-content: center;
-}
-
-.bb-center-val {
-width: 100%;
-color: #fff;
-font-size: 22px;
-font-weight: 700;
-text-align: center;
-padding: 10px 8px;
-outline: none;
-background: transparent;
-cursor: text;
-word-break: break-all;
-line-height: 1.5;
-text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
-display: flex; align-items: center; justify-content: center;
-}
-
-.bb-center-val[contenteditable]:empty::before {
-content: attr(data-ph);
-color: rgba(255,255,255,0.25);
-font-style: italic;
-font-size: 13px;
-}
-
-/* 施工業者ラジオ */
+/* 施工業者 - コンパクト横並び */
 .bb-company {
-flex: 1;
-padding: 4px 7px;
-display: flex;
-flex-direction: column;
-justify-content: center;
-gap: 3px;
+flex:1; padding:5px 7px;
+display:flex; align-items:center; flex-wrap:wrap; gap:3px 8px;
 }
-
-.co-opt {
-display: flex; align-items: center; gap: 5px; cursor: pointer;
-}
-
+.co-opt { display:flex; align-items:center; gap:4px; cursor:pointer; }
 .co-opt input[type=radio] {
-appearance: none; -webkit-appearance: none;
-width: 9px; height: 9px;
-border: 1.5px solid rgba(255,255,255,0.7);
-border-radius: 50%; flex-shrink: 0; cursor: pointer;
+appearance:none; -webkit-appearance:none;
+width:8px; height:8px;
+border:1.5px solid rgba(255,255,255,.7);
+border-radius:50%; flex-shrink:0; cursor:pointer;
 }
 .co-opt input[type=radio]:checked { background:#fff; border-color:#fff; }
-
-.co-opt label {
-font-size: 11px; color:#fff; cursor:pointer;
-font-weight:500; line-height:1.4;
-text-shadow: 1px 1px 2px rgba(0,0,0,0.35);
-}
-
+.co-opt label { font-size:10px; color:#fff; cursor:pointer; font-weight:500; line-height:1.3; white-space:nowrap; }
 #co-other {
-display: none;
-background: rgba(255,255,255,0.12);
-border: 1px solid rgba(255,255,255,0.45);
-border-radius: 2px;
-color: #fff; font-size: 11px;
-font-family: ‘Noto Sans JP’, sans-serif;
-padding: 2px 6px; outline: none; width: 100%;
+display:none; flex-basis:100%;
+background:rgba(255,255,255,.12);
+border:1px solid rgba(255,255,255,.45); border-radius:2px;
+color:#fff; font-size:10px; font-family:‘Noto Sans JP’,sans-serif;
+padding:2px 5px; outline:none;
 }
-#co-other::placeholder { color: rgba(255,255,255,0.3); font-style:italic; }
+#co-other::placeholder { color:rgba(255,255,255,.3); font-style:italic; }
 
-/* リサイズハンドル */
+/* 自由記述欄（一番下・大きく） */
+.bb-free {
+min-height:110px;
+display:flex; align-items:stretch;
+position:relative;
+}
+.bb-free-val {
+flex:1; color:#fff; font-size:18px; font-weight:700;
+padding:10px; outline:none; background:transparent; cursor:text;
+word-break:break-all; line-height:1.6; text-align:center;
+text-shadow:1px 1px 3px rgba(0,0,0,.4);
+display:flex; align-items:center; justify-content:center;
+}
+.bb-free-val[contenteditable]:empty::before {
+content:attr(data-ph); color:rgba(255,255,255,.22); font-style:italic; font-size:13px;
+}
+
+/* リサイズ */
 #rz {
-position: absolute; bottom:0; right:0;
-width:18px; height:18px;
-cursor: se-resize; touch-action: none;
+position:absolute; bottom:0; right:0;
+width:18px; height:18px; cursor:se-resize; touch-action:none;
 }
 #rz::after {
 content:’’; position:absolute; bottom:3px; right:3px;
 width:10px; height:10px;
-border-right:2px solid rgba(255,255,255,0.5);
-border-bottom:2px solid rgba(255,255,255,0.5);
+border-right:2px solid rgba(255,255,255,.45);
+border-bottom:2px solid rgba(255,255,255,.45);
 }
 
-/* =====================
-UI
-===================== */
+/* ====== UI ====== */
 #hint {
 position:absolute; top:16px; left:16px;
-background:rgba(0,0,0,0.45); color:rgba(255,255,255,.7);
+background:rgba(0,0,0,.45); color:rgba(255,255,255,.7);
 font-size:11px; padding:6px 12px; border-radius:20px;
 letter-spacing:.5px; pointer-events:none; backdrop-filter:blur(6px);
 }
-
 #flip-btn {
 position:absolute; top:16px; right:16px;
-background:rgba(0,0,0,0.4); border:2px solid rgba(255,255,255,0.6);
-color:#fff; width:44px; height:44px; border-radius:50%;
-font-size:20px; cursor:pointer;
-display:flex; align-items:center; justify-content:center;
+background:rgba(0,0,0,.4); border:2px solid rgba(255,255,255,.6);
+color:#fff; width:44px; height:44px; border-radius:50%; font-size:20px;
+cursor:pointer; display:flex; align-items:center; justify-content:center;
 backdrop-filter:blur(6px); -webkit-tap-highlight-color:transparent;
 pointer-events:all; z-index:50;
 }
@@ -203,22 +128,19 @@ position:absolute; bottom:0; left:0; right:0;
 display:flex; justify-content:center; align-items:center;
 padding-bottom:32px; gap:20px; pointer-events:none;
 }
-
 .ctrl-btn {
-background:rgba(255,255,255,0.15); border:2px solid rgba(255,255,255,0.6);
+background:rgba(255,255,255,.15); border:2px solid rgba(255,255,255,.6);
 color:#fff; border-radius:50px; padding:10px 20px;
 font-family:‘Noto Sans JP’,sans-serif; font-size:13px; font-weight:700;
 cursor:pointer; letter-spacing:1px; backdrop-filter:blur(10px);
 -webkit-tap-highlight-color:transparent; pointer-events:all;
 }
 .ctrl-btn:active { background:rgba(255,255,255,.35); transform:scale(.95); }
-
 #shutter {
 width:70px; height:70px; border-radius:50%;
 background:rgba(255,255,255,.92); border:4px solid #fff;
 box-shadow:0 0 0 4px rgba(255,255,255,.3);
-cursor:pointer; pointer-events:all;
--webkit-tap-highlight-color:transparent;
+cursor:pointer; pointer-events:all; -webkit-tap-highlight-color:transparent;
 }
 #shutter:active { transform:scale(.9); }
 
@@ -233,9 +155,8 @@ background:#111; color:#fff; gap:20px;
 #start-btn {
 background:#2b5f35; border:2px solid #7ec87a; color:#fff;
 border-radius:50px; padding:14px 36px;
-font-family:‘Noto Sans JP’,sans-serif;
-font-size:15px; font-weight:700; cursor:pointer; letter-spacing:2px;
--webkit-tap-highlight-color:transparent;
+font-family:‘Noto Sans JP’,sans-serif; font-size:15px; font-weight:700;
+cursor:pointer; letter-spacing:2px; -webkit-tap-highlight-color:transparent;
 }
 #start-btn:active { background:#3d7a3d; }
 
@@ -246,11 +167,7 @@ background:rgba(0,0,0,.85);
 flex-direction:column; align-items:center; justify-content:center; gap:20px;
 }
 #preview.show { display:flex; }
-#preview-img {
-max-width:92vw; max-height:65vh;
-border:3px solid #fff; border-radius:4px;
-box-shadow:0 8px 40px rgba(0,0,0,.8);
-}
+#preview-img { max-width:92vw; max-height:65vh; border:3px solid #fff; border-radius:4px; box-shadow:0 8px 40px rgba(0,0,0,.8); }
 #preview-btns { display:flex; gap:16px; }
 .p-btn {
 background:rgba(255,255,255,.15); border:2px solid rgba(255,255,255,.7);
@@ -268,44 +185,44 @@ cursor:pointer; -webkit-tap-highlight-color:transparent;
   <video id="video" autoplay playsinline muted></video>
   <canvas id="canvas"></canvas>
 
-  <!-- ★ 黒板 -->
+  <!-- 黒板 -->
 
   <div id="blackboard">
 
 ```
-<div class="bb-row">
+<div class="bb-row" id="row-work">
   <div class="bb-lbl">作業項目</div>
   <div class="bb-val" contenteditable="true" data-ph="入力" id="f-work"></div>
 </div>
 
-<div class="bb-row">
+<div class="bb-row" id="row-site">
   <div class="bb-lbl">現場名</div>
   <div class="bb-val" contenteditable="true" data-ph="入力" id="f-site"></div>
 </div>
 
-<div class="bb-center">
-  <div class="bb-center-val" contenteditable="true" data-ph="作業内容" id="f-main"></div>
-</div>
-
-<div class="bb-row">
+<div class="bb-row" id="row-co">
   <div class="bb-lbl">施工業者名</div>
   <div class="bb-company">
-    <div class="co-opt"><input type="radio" name="co" value="井上電工株式会社" id="co1"><label for="co1">井上電工株式会社</label></div>
-    <div class="co-opt"><input type="radio" name="co" value="(株)山産"        id="co2"><label for="co2">(株)山産</label></div>
+    <div class="co-opt"><input type="radio" name="co" value="井上電工株式会社" id="co1"><label for="co1">井上電工</label></div>
+    <div class="co-opt"><input type="radio" name="co" value="(株)山産"        id="co2"><label for="co2">山産</label></div>
     <div class="co-opt"><input type="radio" name="co" value="other"           id="co3"><label for="co3">その他</label></div>
     <input type="text" id="co-other" placeholder="業者名を入力">
   </div>
 </div>
 
-<div class="bb-row" style="position:relative">
+<div class="bb-row" id="row-date">
   <div class="bb-lbl">日　付</div>
   <div class="bb-val" id="f-date"></div>
+</div>
+
+<!-- 一番下：大きい自由記述欄 -->
+<div class="bb-free" id="row-free">
+  <div class="bb-free-val" contenteditable="true" data-ph="作業内容" id="f-main"></div>
   <div id="rz"></div>
 </div>
 ```
 
   </div>
-  <!-- /黒板 -->
 
   <div id="hint">黒板をドラッグして移動</div>
   <button id="flip-btn">🔄</button>
@@ -332,116 +249,69 @@ cursor:pointer; -webkit-tap-highlight-color:transparent;
 </div>
 
 <script>
-// ── 日付 ──
-const _d = new Date();
-const _reiwa = _d.getFullYear() - 2018;
-const _wday  = ['日','月','火','水','木','金','土'][_d.getDay()];
-document.getElementById('f-date').textContent =
+// 日付（令和）
+const _d=new Date(), _reiwa=_d.getFullYear()-2018;
+const _wday=['日','月','火','水','木','金','土'][_d.getDay()];
+document.getElementById('f-date').textContent=
   `令和${_reiwa}年${_d.getMonth()+1}月${_d.getDate()}日（${_wday}）`;
 
-// ── 施工業者 ──
-const coOther = document.getElementById('co-other');
-document.querySelectorAll('input[name=co]').forEach(r => {
-  r.addEventListener('change', () => {
-    coOther.style.display = r.value === 'other' ? 'block' : 'none';
-    if(r.value === 'other') coOther.focus();
+// 施工業者
+const coOther=document.getElementById('co-other');
+document.querySelectorAll('input[name=co]').forEach(r=>{
+  r.addEventListener('change',()=>{
+    coOther.style.display=r.value==='other'?'flex':'none';
+    if(r.value==='other') coOther.focus();
   });
 });
-
-function getCompany() {
-  const c = document.querySelector('input[name=co]:checked');
+function getCompany(){
+  const c=document.querySelector('input[name=co]:checked');
   if(!c) return '';
-  return c.value === 'other' ? (coOther.value || '') : c.value;
+  return c.value==='other'?(coOther.value||''):c.value;
 }
 
-// ── カメラ ──
-let stream = null, facingMode = 'environment';
-const video  = document.getElementById('video');
-const canvas = document.getElementById('canvas');
-
-async function startCamera() {
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({
-      video:{ facingMode, width:{ideal:1920}, height:{ideal:1080} }, audio:false
-    });
-    video.srcObject = stream;
-    document.getElementById('start-screen').style.display = 'none';
-  } catch(e) {
-    alert('カメラへのアクセスが許可されていません。\nSafariの設定からカメラを許可してください。');
-  }
+// カメラ
+let stream=null, facingMode='environment';
+const video=document.getElementById('video'), canvas=document.getElementById('canvas');
+async function startCamera(){
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode,width:{ideal:1920},height:{ideal:1080}},audio:false});
+    video.srcObject=stream;
+    document.getElementById('start-screen').style.display='none';
+  }catch(e){ alert('カメラへのアクセスが許可されていません。\nSafariの設定からカメラを許可してください。'); }
 }
 
-// ── ドラッグ ──
-const bb = document.getElementById('blackboard');
-let drag=false, dsx,dsy,dox,doy;
+// ドラッグ
+const bb=document.getElementById('blackboard');
+let drag=false,dsx,dsy,dox,doy;
+function noEdit(el){ return el.isContentEditable||el.closest('[contenteditable]')||el.tagName==='INPUT'||el.tagName==='LABEL'||el.closest('label')||el.id==='rz'; }
+bb.addEventListener('mousedown',e=>{ if(noEdit(e.target)) return; drag=true; dsx=e.clientX; dsy=e.clientY; dox=bb.offsetLeft; doy=bb.offsetTop; bb.classList.add('dragging'); e.preventDefault(); });
+document.addEventListener('mousemove',e=>{ if(drag) clamp(dox+e.clientX-dsx,doy+e.clientY-dsy); });
+document.addEventListener('mouseup',()=>{ drag=false; bb.classList.remove('dragging'); });
+bb.addEventListener('touchstart',e=>{ if(noEdit(e.target)) return; drag=true; const t=e.touches[0]; dsx=t.clientX; dsy=t.clientY; dox=bb.offsetLeft; doy=bb.offsetTop; bb.classList.add('dragging'); },{passive:true});
+document.addEventListener('touchmove',e=>{ if(!drag) return; clamp(dox+e.touches[0].clientX-dsx,doy+e.touches[0].clientY-dsy); e.preventDefault(); },{passive:false});
+document.addEventListener('touchend',()=>{ drag=false; bb.classList.remove('dragging'); });
+function clamp(nx,ny){ const c=document.getElementById('camera-container'); bb.style.left=Math.max(0,Math.min(c.offsetWidth-bb.offsetWidth,nx))+'px'; bb.style.top=Math.max(0,Math.min(c.offsetHeight-bb.offsetHeight,ny))+'px'; }
 
-function noEdit(el) {
-  return el.isContentEditable || el.closest('[contenteditable]')
-      || el.tagName==='INPUT' || el.tagName==='LABEL' || el.closest('label')
-      || el.id==='rz';
-}
+// リサイズ
+const rz=document.getElementById('rz');
+let rzing=false,rzsx,rzow;
+rz.addEventListener('mousedown',e=>{ rzing=true; rzsx=e.clientX; rzow=bb.offsetWidth; e.preventDefault(); e.stopPropagation(); });
+rz.addEventListener('touchstart',e=>{ rzing=true; rzsx=e.touches[0].clientX; rzow=bb.offsetWidth; e.stopPropagation(); },{passive:true});
+document.addEventListener('mousemove',e=>{ if(rzing) bb.style.width=Math.max(200,rzow+(e.clientX-rzsx))+'px'; });
+document.addEventListener('touchmove',e=>{ if(rzing) bb.style.width=Math.max(200,rzow+(e.touches[0].clientX-rzsx))+'px'; },{passive:true});
+document.addEventListener('mouseup',()=>{ rzing=false; });
+document.addEventListener('touchend',()=>{ rzing=false; });
 
-bb.addEventListener('mousedown', e=>{
-  if(noEdit(e.target)) return;
-  drag=true; dsx=e.clientX; dsy=e.clientY; dox=bb.offsetLeft; doy=bb.offsetTop;
-  bb.classList.add('dragging'); e.preventDefault();
-});
-document.addEventListener('mousemove', e=>{
-  if(!drag) return;
-  clamp(dox+e.clientX-dsx, doy+e.clientY-dsy);
-});
-document.addEventListener('mouseup', ()=>{ drag=false; bb.classList.remove('dragging'); });
+// サイズ切替
+const sizes=[{w:230,l:'小'},{w:310,l:'中'},{w:400,l:'大'}]; let szIdx=1;
+document.getElementById('size-btn').addEventListener('click',()=>{ szIdx=(szIdx+1)%sizes.length; bb.style.width=sizes[szIdx].w+'px'; document.getElementById('size-btn').textContent='サイズ：'+sizes[szIdx].l; });
 
-bb.addEventListener('touchstart', e=>{
-  if(noEdit(e.target)) return;
-  drag=true;
-  const t=e.touches[0]; dsx=t.clientX; dsy=t.clientY; dox=bb.offsetLeft; doy=bb.offsetTop;
-  bb.classList.add('dragging');
-},{passive:true});
-document.addEventListener('touchmove', e=>{
-  if(!drag) return;
-  const t=e.touches[0];
-  clamp(dox+t.clientX-dsx, doy+t.clientY-dsy);
-  e.preventDefault();
-},{passive:false});
-document.addEventListener('touchend', ()=>{ drag=false; bb.classList.remove('dragging'); });
-
-function clamp(nx,ny){
-  const cont=document.getElementById('camera-container');
-  bb.style.left = Math.max(0, Math.min(cont.offsetWidth -bb.offsetWidth,  nx))+'px';
-  bb.style.top  = Math.max(0, Math.min(cont.offsetHeight-bb.offsetHeight, ny))+'px';
-}
-
-// ── リサイズ ──
-const rz = document.getElementById('rz');
-let rzing=false, rzsx, rzow;
-rz.addEventListener('mousedown', e=>{ rzing=true; rzsx=e.clientX; rzow=bb.offsetWidth; e.preventDefault(); e.stopPropagation(); });
-rz.addEventListener('touchstart', e=>{ rzing=true; rzsx=e.touches[0].clientX; rzow=bb.offsetWidth; e.stopPropagation(); },{passive:true});
-document.addEventListener('mousemove', e=>{ if(rzing) bb.style.width=Math.max(200,rzow+(e.clientX-rzsx))+'px'; });
-document.addEventListener('touchmove', e=>{ if(rzing) bb.style.width=Math.max(200,rzow+(e.touches[0].clientX-rzsx))+'px'; },{passive:true});
-document.addEventListener('mouseup',  ()=>{ rzing=false; });
-document.addEventListener('touchend', ()=>{ rzing=false; });
-
-// ── サイズ切替 ──
-const sizes=[{w:230,l:'小'},{w:310,l:'中'},{w:400,l:'大'}];
-let szIdx=1;
-document.getElementById('size-btn').addEventListener('click',()=>{
-  szIdx=(szIdx+1)%sizes.length;
-  bb.style.width=sizes[szIdx].w+'px';
-  document.getElementById('size-btn').textContent='サイズ：'+sizes[szIdx].l;
-});
-
-// ── 透明度 ──
+// 透明度
 const ops=[1,.85,.65,.45]; let opIdx=0;
-document.getElementById('op-btn').addEventListener('click',()=>{
-  opIdx=(opIdx+1)%ops.length;
-  bb.style.opacity=ops[opIdx];
-  document.getElementById('op-btn').textContent=opIdx===0?'透明度':`透明度${Math.round(ops[opIdx]*100)}%`;
-});
+document.getElementById('op-btn').addEventListener('click',()=>{ opIdx=(opIdx+1)%ops.length; bb.style.opacity=ops[opIdx]; document.getElementById('op-btn').textContent=opIdx===0?'透明度':`透明度${Math.round(ops[opIdx]*100)}%`; });
 
-// ── シャッター ──
+// シャッター
 let captured=null;
-
 document.getElementById('shutter').addEventListener('click',()=>{
   if(!stream){ alert('先にカメラを起動してください'); return; }
   const cont=document.getElementById('camera-container');
@@ -455,126 +325,84 @@ document.getElementById('shutter').addEventListener('click',()=>{
   document.getElementById('preview').classList.add('show');
 });
 
-// ── Canvas描画 ──
+// Canvas描画
 function drawBoard(ctx){
-  const bx = bb.offsetLeft;
-  const by = bb.offsetTop;
-  const bw = bb.offsetWidth;
-  const op = parseFloat(bb.style.opacity||1);
-  const LW = 70;   // ラベル幅（CSSと一致）
-  const BW = 3;    // 枠線幅
-  const LINE = 2;  // 行区切り線幅
+  const bx=bb.offsetLeft, by=bb.offsetTop, bw=bb.offsetWidth;
+  const op=parseFloat(bb.style.opacity||1);
+  const LW=62, BW=3, LN=2;
 
-  // 各行の offsetHeight を実測
-  const rows     = Array.from(bb.querySelectorAll('.bb-row'));
-  const centerEl = bb.querySelector('.bb-center');
-  const centerH  = centerEl.offsetHeight;
-  const rowHs    = rows.map(r => r.offsetHeight);
-  const totalH   = rowHs.reduce((s,h)=>s+h,0) + centerH;
+  const hWork=document.getElementById('row-work').offsetHeight;
+  const hSite=document.getElementById('row-site').offsetHeight;
+  const hCo  =document.getElementById('row-co').offsetHeight;
+  const hDate=document.getElementById('row-date').offsetHeight;
+  const hFree=document.getElementById('row-free').offsetHeight;
+  const totalH=hWork+hSite+hCo+hDate+hFree;
 
   ctx.save();
-  ctx.globalAlpha = op;
+  ctx.globalAlpha=op;
 
   // 背景
   ctx.fillStyle='#2b5f35';
   ctx.fillRect(bx,by,bw,totalH);
 
   // 外枠
-  ctx.strokeStyle='#e0e0e0'; ctx.lineWidth=BW;
-  ctx.strokeRect(bx+BW/2, by+BW/2, bw-BW, totalH-BW);
+  ctx.strokeStyle='#ddd'; ctx.lineWidth=BW;
+  ctx.strokeRect(bx+BW/2,by+BW/2,bw-BW,totalH-BW);
 
-  // ── 各行を上から描く ──
-  // row[0]=作業項目, row[1]=現場名, then center, row[2]=施工業者名, row[3]=日付
-  const topRows    = [rows[0], rows[1]];
-  const bottomRows = [rows[2], rows[3]];
+  // 上4行
+  const rows=[
+    {h:hWork, lbl:'作業項目', val:document.getElementById('f-work').textContent.trim(), isCo:false},
+    {h:hSite, lbl:'現場名',  val:document.getElementById('f-site').textContent.trim(), isCo:false},
+    {h:hCo,   lbl:'施工業者名', val:getCompany(), isCo:true},
+    {h:hDate, lbl:'日　付',  val:document.getElementById('f-date').textContent.trim(), isCo:false},
+  ];
 
-  let cy = by;
-
-  // 上2行
-  topRows.forEach((rowEl, i) => {
-    const rh = rowHs[i];
-    if(i>0){
-      ctx.strokeStyle='#e0e0e0'; ctx.lineWidth=LINE;
-      ctx.beginPath(); ctx.moveTo(bx,cy); ctx.lineTo(bx+bw,cy); ctx.stroke();
-    }
-    drawRow(ctx, bx, cy, bw, rh, LW, rowEl);
-    cy += rh;
+  let cy=by;
+  rows.forEach((r,i)=>{
+    if(i>0){ ctx.strokeStyle='#ddd'; ctx.lineWidth=LN; ctx.beginPath(); ctx.moveTo(bx,cy); ctx.lineTo(bx+bw,cy); ctx.stroke(); }
+    // ラベル背景
+    ctx.fillStyle='rgba(0,0,0,.2)'; ctx.fillRect(bx,cy,LW,r.h);
+    // ラベル縦線
+    ctx.strokeStyle='#ddd'; ctx.lineWidth=LN; ctx.beginPath(); ctx.moveTo(bx+LW,cy); ctx.lineTo(bx+LW,cy+r.h); ctx.stroke();
+    // ラベル文字
+    ctx.fillStyle='#fff'; ctx.font='700 10px "Noto Sans JP",sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(r.lbl,bx+LW/2,cy+r.h/2);
+    // 値
+    ctx.font='500 11px "Noto Sans JP",sans-serif'; ctx.textAlign='left';
+    ctx.fillText(r.val,bx+LW+7,cy+r.h/2);
+    cy+=r.h;
   });
 
-  // 中央大エリア区切り線
-  ctx.strokeStyle='#e0e0e0'; ctx.lineWidth=LINE;
+  // 自由記述欄（一番下）
+  ctx.strokeStyle='#ddd'; ctx.lineWidth=LN;
   ctx.beginPath(); ctx.moveTo(bx,cy); ctx.lineTo(bx+bw,cy); ctx.stroke();
-
-  // 中央テキスト
-  const mainTxt = document.getElementById('f-main').textContent.trim();
+  const mainTxt=document.getElementById('f-main').textContent.trim();
   if(mainTxt){
     ctx.fillStyle='#fff';
-    const fs = Math.max(14, Math.round(bw*0.065));
+    const fs=Math.max(14,Math.round(bw*0.06));
     ctx.font=`700 ${fs}px "Noto Sans JP",sans-serif`;
     ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText(mainTxt, bx+bw/2, cy+centerH/2);
+    ctx.fillText(mainTxt,bx+bw/2,cy+hFree/2);
   }
-  cy += centerH;
-
-  // 下2行
-  bottomRows.forEach((rowEl, i) => {
-    const rh = rowHs[2+i];
-    ctx.strokeStyle='#e0e0e0'; ctx.lineWidth=LINE;
-    ctx.beginPath(); ctx.moveTo(bx,cy); ctx.lineTo(bx+bw,cy); ctx.stroke();
-    drawRow(ctx, bx, cy, bw, rh, LW, rowEl);
-    cy += rh;
-  });
 
   ctx.restore();
 }
 
-function drawRow(ctx, x, y, w, h, lw, rowEl){
-  // ラベル背景
-  ctx.fillStyle='rgba(0,0,0,0.18)';
-  ctx.fillRect(x, y, lw, h);
-  // ラベル縦区切り
-  ctx.strokeStyle='#e0e0e0'; ctx.lineWidth=2;
-  ctx.beginPath(); ctx.moveTo(x+lw,y); ctx.lineTo(x+lw,y+h); ctx.stroke();
-
-  // ラベルテキスト
-  const lblEl = rowEl.querySelector('.bb-lbl');
-  const lbl   = lblEl ? lblEl.textContent.trim() : '';
-  ctx.fillStyle='#fff';
-  ctx.font='700 10px "Noto Sans JP",sans-serif';
-  ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.fillText(lbl, x+lw/2, y+h/2);
-
-  // 値テキスト
-  let val='';
-  if(rowEl.querySelector('.bb-company')){
-    val = getCompany();
-  } else {
-    const vEl = rowEl.querySelector('.bb-val');
-    val = vEl ? vEl.textContent.trim() : '';
-  }
-  ctx.font='500 11px "Noto Sans JP",sans-serif';
-  ctx.textAlign='left'; ctx.textBaseline='middle';
-  ctx.fillText(val, x+lw+7, y+h/2);
-}
-
-// ── 閉じる・保存 ──
+// 閉じる・保存
 function closePreview(){ document.getElementById('preview').classList.remove('show'); captured=null; }
 function savePhoto(){
   if(!captured) return;
   const a=document.createElement('a');
   a.download=`現場写真_${new Date().toISOString().slice(0,19).replace(/[:.]/g,'-')}.jpg`;
-  a.href=captured; a.click();
-  closePreview();
+  a.href=captured; a.click(); closePreview();
 }
 
-// ── ボタン登録（全関数定義後） ──
-document.getElementById('start-btn').addEventListener('click', startCamera);
-document.getElementById('flip-btn').addEventListener('click', async()=>{
-  facingMode = facingMode==='environment'?'user':'environment';
-  if(stream){ stream.getTracks().forEach(t=>t.stop()); await startCamera(); }
-});
-document.getElementById('retake-btn').addEventListener('click', closePreview);
-document.getElementById('save-btn').addEventListener('click', savePhoto);
+// ボタン登録
+document.getElementById('start-btn').addEventListener('click',startCamera);
+document.getElementById('flip-btn').addEventListener('click',async()=>{ facingMode=facingMode==='environment'?'user':'environment'; if(stream){ stream.getTracks().forEach(t=>t.stop()); await startCamera(); } });
+document.getElementById('retake-btn').addEventListener('click',closePreview);
+document.getElementById('save-btn').addEventListener('click',savePhoto);
 </script>
 
 </body>
