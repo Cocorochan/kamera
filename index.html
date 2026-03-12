@@ -24,14 +24,13 @@ box-shadow:0 3px 16px rgba(0,0,0,.6);
 }
 #blackboard.dragging { cursor:grabbing; opacity:.9; }
 
-/* 行共通 */
+/* 行共通（全部1行分の高さ） */
 .bb-row {
 display:flex;
 border-bottom:2px solid #ddd;
+height:30px;        /* ← 全行を固定30px */
+overflow:hidden;
 }
-
-/* 施工業者行だけ高さ制限 */
-#row-co { max-height:28px; overflow:hidden; }
 
 /* ラベル列 */
 .bb-lbl {
@@ -40,56 +39,44 @@ background:rgba(0,0,0,.2);
 border-right:2px solid #ddd;
 color:#fff; font-size:10px; font-weight:700;
 display:flex; align-items:center; justify-content:center;
-text-align:center; line-height:1.4; letter-spacing:.5px;
-padding:5px 2px;
+text-align:center; line-height:1.3; letter-spacing:.5px;
+padding:2px;
 text-shadow:1px 1px 2px rgba(0,0,0,.5);
 }
 
 /* 値列 */
 .bb-val {
-flex:1; color:#fff; font-size:12px; font-weight:500;
-padding:5px 8px; display:flex; align-items:center;
+flex:1; color:#fff; font-size:11px; font-weight:500;
+padding:0 8px; display:flex; align-items:center;
 outline:none; background:transparent; cursor:text;
-word-break:break-all; line-height:1.5;
+word-break:break-all; line-height:1.4;
 text-shadow:1px 1px 2px rgba(0,0,0,.35);
 }
 .bb-val[contenteditable]:empty::before {
 content:attr(data-ph); color:rgba(255,255,255,.28); font-style:italic; font-size:10px;
 }
 
-/* 施工業者 - 1行横並び・超コンパクト */
-.bb-company {
-flex:1; padding:3px 6px;
-display:flex; align-items:center; flex-wrap:wrap; gap:2px 7px;
+/* 施工業者欄：テキスト表示のみ（1行固定） */
+#co-display {
+flex:1; color:#fff; font-size:11px; font-weight:500;
+padding:0 8px; display:flex; align-items:center;
+text-shadow:1px 1px 2px rgba(0,0,0,.35);
+cursor:pointer;
 }
-.co-opt { display:flex; align-items:center; gap:3px; cursor:pointer; }
-.co-opt input[type=radio] {
-appearance:none; -webkit-appearance:none;
-width:7px; height:7px;
-border:1.5px solid rgba(255,255,255,.7);
-border-radius:50%; flex-shrink:0; cursor:pointer;
+#co-display:empty::before {
+content:‘タップして選択’; color:rgba(255,255,255,.3); font-style:italic; font-size:10px;
 }
-.co-opt input[type=radio]:checked { background:#fff; border-color:#fff; }
-.co-opt label { font-size:9px; color:#fff; cursor:pointer; font-weight:500; line-height:1; white-space:nowrap; }
-#co-other {
-display:none; flex-basis:100%;
-background:rgba(255,255,255,.12);
-border:1px solid rgba(255,255,255,.45); border-radius:2px;
-color:#fff; font-size:9px; font-family:‘Noto Sans JP’,sans-serif;
-padding:1px 5px; outline:none;
-}
-#co-other::placeholder { color:rgba(255,255,255,.3); font-style:italic; }
 
-/* 自由記述欄（一番下・大きく） */
+/* 自由記述欄（一番下・黒板の半分以上） */
 .bb-free {
-min-height:130px;
+min-height:160px;
 display:flex; align-items:stretch;
 position:relative;
-border-top: 2px solid #ddd;
+border-top:2px solid #ddd;
 }
 .bb-free-val {
 flex:1; color:#fff; font-size:20px; font-weight:700;
-padding:10px; outline:none; background:transparent; cursor:text;
+padding:12px 10px; outline:none; background:transparent; cursor:text;
 word-break:break-all; line-height:1.6; text-align:center;
 text-shadow:1px 1px 3px rgba(0,0,0,.4);
 display:flex; align-items:center; justify-content:center;
@@ -108,6 +95,48 @@ content:’’; position:absolute; bottom:3px; right:3px;
 width:10px; height:10px;
 border-right:2px solid rgba(255,255,255,.45);
 border-bottom:2px solid rgba(255,255,255,.45);
+}
+
+/* ====== 業者選択ポップアップ（黒板外） ====== */
+#co-popup {
+display:none;
+position:absolute;
+background:rgba(30,30,30,.97);
+border:1.5px solid rgba(255,255,255,.3);
+border-radius:10px;
+z-index:300;
+padding:8px 0;
+min-width:180px;
+box-shadow:0 4px 20px rgba(0,0,0,.7);
+}
+#co-popup.show { display:block; }
+
+.co-item {
+padding:10px 18px;
+color:#fff; font-size:13px; font-weight:500;
+cursor:pointer; letter-spacing:.5px;
+border-bottom:1px solid rgba(255,255,255,.08);
+}
+.co-item:last-child { border-bottom:none; }
+.co-item:active, .co-item.selected { background:rgba(255,255,255,.12); color:#7ec87a; }
+
+#co-other-wrap {
+display:none;
+padding:6px 12px 8px;
+border-top:1px solid rgba(255,255,255,.1);
+}
+#co-other {
+background:rgba(255,255,255,.1);
+border:1px solid rgba(255,255,255,.4); border-radius:6px;
+color:#fff; font-size:12px; font-family:‘Noto Sans JP’,sans-serif;
+padding:5px 8px; outline:none; width:100%;
+}
+#co-other::placeholder { color:rgba(255,255,255,.35); }
+#co-other-ok {
+margin-top:6px; width:100%;
+background:#2b5f35; border:1px solid #7ec87a; border-radius:6px;
+color:#fff; font-size:12px; font-family:‘Noto Sans JP’,sans-serif;
+padding:5px; cursor:pointer;
 }
 
 /* ====== UI ====== */
@@ -204,14 +233,10 @@ cursor:pointer; -webkit-tap-highlight-color:transparent;
   <div class="bb-val" contenteditable="true" data-ph="入力" id="f-site"></div>
 </div>
 
+<!-- 施工業者：タップで黒板外ポップアップを開く -->
 <div class="bb-row" id="row-co">
   <div class="bb-lbl">施工業者名</div>
-  <div class="bb-company">
-    <div class="co-opt"><input type="radio" name="co" value="井上電工株式会社" id="co1"><label for="co1">井上電工</label></div>
-    <div class="co-opt"><input type="radio" name="co" value="(株)山産"        id="co2"><label for="co2">山産</label></div>
-    <div class="co-opt"><input type="radio" name="co" value="other"           id="co3"><label for="co3">その他</label></div>
-    <input type="text" id="co-other" placeholder="業者名を入力">
-  </div>
+  <div id="co-display"></div>
 </div>
 
 <div class="bb-row" id="row-date">
@@ -226,6 +251,18 @@ cursor:pointer; -webkit-tap-highlight-color:transparent;
 </div>
 ```
 
+  </div>
+
+  <!-- 業者選択ポップアップ（黒板の外） -->
+
+  <div id="co-popup">
+    <div class="co-item" data-val="井上電工株式会社">井上電工株式会社</div>
+    <div class="co-item" data-val="(株)山産">(株)山産</div>
+    <div class="co-item" data-val="other">その他（手入力）</div>
+    <div id="co-other-wrap">
+      <input type="text" id="co-other" placeholder="業者名を入力">
+      <button id="co-other-ok">決定</button>
+    </div>
   </div>
 
   <div id="hint">黒板をドラッグして移動</div>
@@ -259,19 +296,61 @@ const _wday=['日','月','火','水','木','金','土'][_d.getDay()];
 document.getElementById('f-date').textContent=
   `令和${_reiwa}年${_d.getMonth()+1}月${_d.getDate()}日（${_wday}）`;
 
-// 施工業者
-const coOther=document.getElementById('co-other');
-document.querySelectorAll('input[name=co]').forEach(r=>{
-  r.addEventListener('change',()=>{
-    coOther.style.display=r.value==='other'?'flex':'none';
-    if(r.value==='other') coOther.focus();
+// ── 施工業者ポップアップ ──
+let companyVal = '井上電工株式会社'; // デフォルト
+const coDisplay  = document.getElementById('co-display');
+const coPopup    = document.getElementById('co-popup');
+const coOtherWrap= document.getElementById('co-other-wrap');
+const coOther    = document.getElementById('co-other');
+
+// 初期表示
+coDisplay.textContent = companyVal;
+document.querySelector(`.co-item[data-val="井上電工株式会社"]`).classList.add('selected');
+
+// 施工業者欄タップ → ポップアップ表示
+coDisplay.addEventListener('click', e => {
+  e.stopPropagation();
+  const rect = document.getElementById('row-co').getBoundingClientRect();
+  coPopup.style.top  = (rect.bottom + 4) + 'px';
+  coPopup.style.left = rect.left + 'px';
+  coPopup.classList.toggle('show');
+});
+
+// 選択肢クリック
+document.querySelectorAll('.co-item').forEach(item => {
+  item.addEventListener('click', e => {
+    e.stopPropagation();
+    document.querySelectorAll('.co-item').forEach(i=>i.classList.remove('selected'));
+    item.classList.add('selected');
+    const val = item.dataset.val;
+    if(val === 'other') {
+      coOtherWrap.style.display = 'block';
+      coOther.focus();
+    } else {
+      companyVal = val;
+      coDisplay.textContent = val;
+      coOtherWrap.style.display = 'none';
+      coPopup.classList.remove('show');
+    }
   });
 });
-function getCompany(){
-  const c=document.querySelector('input[name=co]:checked');
-  if(!c) return '';
-  return c.value==='other'?(coOther.value||''):c.value;
-}
+
+// その他決定
+document.getElementById('co-other-ok').addEventListener('click', e => {
+  e.stopPropagation();
+  const v = coOther.value.trim();
+  if(v) {
+    companyVal = v;
+    coDisplay.textContent = v;
+    coPopup.classList.remove('show');
+    coOtherWrap.style.display = 'none';
+  }
+});
+
+// 外タップで閉じる
+document.addEventListener('click', () => coPopup.classList.remove('show'));
+
+function getCompany() { return companyVal; }
 
 // カメラ
 let stream=null, facingMode='environment';
@@ -287,7 +366,7 @@ async function startCamera(){
 // ドラッグ
 const bb=document.getElementById('blackboard');
 let drag=false,dsx,dsy,dox,doy;
-function noEdit(el){ return el.isContentEditable||el.closest('[contenteditable]')||el.tagName==='INPUT'||el.tagName==='LABEL'||el.closest('label')||el.id==='rz'; }
+function noEdit(el){ return el.isContentEditable||el.closest('[contenteditable]')||el.id==='co-display'||el.id==='rz'; }
 bb.addEventListener('mousedown',e=>{ if(noEdit(e.target)) return; drag=true; dsx=e.clientX; dsy=e.clientY; dox=bb.offsetLeft; doy=bb.offsetTop; bb.classList.add('dragging'); e.preventDefault(); });
 document.addEventListener('mousemove',e=>{ if(drag) clamp(dox+e.clientX-dsx,doy+e.clientY-dsy); });
 document.addEventListener('mouseup',()=>{ drag=false; bb.classList.remove('dragging'); });
@@ -355,24 +434,20 @@ function drawBoard(ctx){
 
   // 上4行
   const rows=[
-    {h:hWork, lbl:'作業項目', val:document.getElementById('f-work').textContent.trim(), isCo:false},
-    {h:hSite, lbl:'現場名',  val:document.getElementById('f-site').textContent.trim(), isCo:false},
-    {h:hCo,   lbl:'施工業者名', val:getCompany(), isCo:true},
-    {h:hDate, lbl:'日　付',  val:document.getElementById('f-date').textContent.trim(), isCo:false},
+    {h:hWork, lbl:'作業項目', val:document.getElementById('f-work').textContent.trim()},
+    {h:hSite, lbl:'現場名',  val:document.getElementById('f-site').textContent.trim()},
+    {h:hCo,   lbl:'施工業者名', val:getCompany()},
+    {h:hDate, lbl:'日　付',  val:document.getElementById('f-date').textContent.trim()},
   ];
 
   let cy=by;
   rows.forEach((r,i)=>{
     if(i>0){ ctx.strokeStyle='#ddd'; ctx.lineWidth=LN; ctx.beginPath(); ctx.moveTo(bx,cy); ctx.lineTo(bx+bw,cy); ctx.stroke(); }
-    // ラベル背景
     ctx.fillStyle='rgba(0,0,0,.2)'; ctx.fillRect(bx,cy,LW,r.h);
-    // ラベル縦線
     ctx.strokeStyle='#ddd'; ctx.lineWidth=LN; ctx.beginPath(); ctx.moveTo(bx+LW,cy); ctx.lineTo(bx+LW,cy+r.h); ctx.stroke();
-    // ラベル文字
     ctx.fillStyle='#fff'; ctx.font='700 10px "Noto Sans JP",sans-serif';
     ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText(r.lbl,bx+LW/2,cy+r.h/2);
-    // 値
     ctx.font='500 11px "Noto Sans JP",sans-serif'; ctx.textAlign='left';
     ctx.fillText(r.val,bx+LW+7,cy+r.h/2);
     cy+=r.h;
