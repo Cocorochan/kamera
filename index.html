@@ -641,80 +641,73 @@ transition: all 0.2s;
 
   function drawBlackboard(ctx) {
     const x = bb.offsetLeft, y = bb.offsetTop;
-    const w = bb.offsetWidth, h = bb.offsetHeight;
+    const w = bb.offsetWidth;
     const opacity = parseFloat(bb.style.opacity || 1);
+
+    const titleH = 22;
+    const labelW = 52;
+    const bigH = 42;   // 作業項目
+    const normH = 26;  // その他の行
+
+    const companyName = getCompanyName();
+    const fields = [
+      { label:'作業項目',  val: document.getElementById('f-work').textContent, h: bigH },
+      { label:'現場名',    val: document.getElementById('f-site').textContent,  h: normH },
+      { label:'施工業者名', val: companyName,                                   h: normH },
+      { label:'日　付',    val: document.getElementById('f-date').textContent,  h: normH },
+    ];
+
+    // 黒板全体の高さをコンテンツから計算
+    const totalH = titleH + fields.reduce((s, f) => s + f.h, 0);
 
     ctx.save();
     ctx.globalAlpha = opacity;
 
-    // 背景
+    // 背景（ぴったりサイズ）
     ctx.fillStyle = '#2d5a27';
-    ctx.fillRect(x, y, w, h);
-
-    // ラインテクスチャ
-    ctx.globalAlpha = opacity * 0.04;
-    for(let i = 0; i < h; i += 23) {
-      ctx.fillStyle = '#fff'; ctx.fillRect(x, y+i, w, 1);
-    }
-    ctx.globalAlpha = opacity;
+    ctx.fillRect(x, y, w, totalH);
 
     // 外枠
     ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5;
-    ctx.strokeRect(x+1.25, y+1.25, w-2.5, h-2.5);
+    ctx.strokeRect(x + 1.25, y + 1.25, w - 2.5, totalH - 2.5);
 
-    // タイトル
-    const titleH = 22;
+    // タイトル行
     ctx.fillStyle = 'rgba(0,0,0,0.25)';
     ctx.fillRect(x, y, w, titleH);
     ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.moveTo(x, y+titleH); ctx.lineTo(x+w, y+titleH); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, y + titleH); ctx.lineTo(x + w, y + titleH); ctx.stroke();
     ctx.fillStyle = '#fff';
     ctx.font = '600 10px "Noto Serif JP", serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('工　事　黒　板', x + w/2, y + titleH - 6);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('工　事　黒　板', x + w / 2, y + titleH / 2);
 
-    // フィールドデータ
-    const companyName = getCompanyName();
-    const fields = [
-      { label:'作業項目', val: document.getElementById('f-work').textContent, big: true },
-      { label:'現場名',   val: document.getElementById('f-site').textContent, big: false },
-      { label:'施工業者名', val: companyName, big: false },
-      { label:'日　付',   val: document.getElementById('f-date').textContent, big: false },
-    ];
-
+    // 各フィールド行
     let fy = y + titleH;
-    const labelW = 52;
-    const normalH = 28, bigH = 46;
-
     fields.forEach(f => {
-      const rowH = f.big ? bigH : normalH;
-
-      // 行の背景（なし、緑のまま）
-      // 上の区切り線
+      // 区切り線（上）
       ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(x, fy); ctx.lineTo(x+w, fy); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x, fy); ctx.lineTo(x + w, fy); ctx.stroke();
 
       // ラベル背景
       ctx.fillStyle = 'rgba(0,0,0,0.2)';
-      ctx.fillRect(x, fy, labelW, rowH);
+      ctx.fillRect(x, fy, labelW, f.h);
 
-      // ラベル区切り線
+      // ラベル縦区切り
       ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(x+labelW, fy); ctx.lineTo(x+labelW, fy+rowH); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x + labelW, fy); ctx.lineTo(x + labelW, fy + f.h); ctx.stroke();
 
-      // ラベルテキスト
+      // ラベル文字
       ctx.fillStyle = '#fff';
-      ctx.font = '700 8px "Noto Sans JP", sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(f.label, x+labelW/2, fy+rowH/2+3);
+      ctx.font = '700 9px "Noto Sans JP", sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(f.label, x + labelW / 2, fy + f.h / 2);
 
-      // 値テキスト
-      ctx.font = f.big ? '500 11px "Noto Sans JP", sans-serif' : '500 9px "Noto Sans JP", sans-serif';
+      // 値
+      ctx.font = '500 10px "Noto Sans JP", sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText(f.val, x+labelW+5, fy+rowH/2+3);
+      ctx.fillText(f.val, x + labelW + 6, fy + f.h / 2);
 
-      fy += rowH;
+      fy += f.h;
     });
 
     ctx.restore();
