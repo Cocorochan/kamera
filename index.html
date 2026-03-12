@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>現場黒板アプリ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@600&display=swap');
+
+- { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+font-family: ‘Noto Sans JP’, sans-serif;
+background: #1a1a1a;
+overflow: hidden;
+height: 100vh;
+width: 100vw;
+user-select: none;
+}
+
+#camera-container {
+position: relative;
+width: 100vw;
+height: 100vh;
+background: #2a2a2a;
+overflow: hidden;
+}
+
+#video {
+width: 100%;
+height: 100%;
+object-fit: cover;
+display: block;
+}
+
+#canvas {
+display: none;
+}
+
+/* 黒板 */
+#blackboard {
+position: absolute;
+width: 320px;
+min-height: 240px;
+background: #2d5a27;
+border: 3px solid #fff;
+border-radius: 4px;
+cursor: grab;
+top: 60px;
+left: 30px;
+touch-action: none;
+box-shadow:
+inset 0 0 30px rgba(0,0,0,0.3),
+0 4px 20px rgba(0,0,0,0.6),
+2px 2px 0 rgba(255,255,255,0.1);
+background-image:
+repeating-linear-gradient(
+0deg,
+transparent,
+transparent 28px,
+rgba(255,255,255,0.03) 28px,
+rgba(255,255,255,0.03) 29px
+);
+}
+
+#blackboard.dragging {
+cursor: grabbing;
+opacity: 0.92;
+box-shadow:
+inset 0 0 30px rgba(0,0,0,0.3),
+0 12px 40px rgba(0,0,0,0.8),
+2px 2px 0 rgba(255,255,255,0.1);
+}
+
+.board-title {
+background: rgba(0,0,0,0.25);
+text-align: center;
+padding: 6px 8px;
+border-bottom: 2px solid #fff;
+font-family: ‘Noto Serif JP’, serif;
+font-size: 13px;
+font-weight: 600;
+color: #fff;
+letter-spacing: 3px;
+text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+}
+
+.board-fields {
+padding: 8px 10px 10px;
+}
+
+.field-row {
+display: flex;
+border: 1.5px solid rgba(255,255,255,0.85);
+margin-bottom: 6px;
+min-height: 36px;
+}
+
+.field-row:last-child {
+margin-bottom: 0;
+}
+
+.field-label {
+background: rgba(0,0,0,0.2);
+color: #fff;
+font-size: 10px;
+font-weight: 700;
+padding: 4px 6px;
+display: flex;
+align-items: center;
+justify-content: center;
+min-width: 72px;
+max-width: 72px;
+border-right: 1.5px solid rgba(255,255,255,0.85);
+letter-spacing: 1px;
+line-height: 1.3;
+text-align: center;
+text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+white-space: pre-line;
+}
+
+.field-value {
+flex: 1;
+color: #fff;
+font-size: 13px;
+padding: 4px 8px;
+display: flex;
+align-items: center;
+word-break: break-all;
+line-height: 1.4;
+text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+font-family: ‘Noto Sans JP’, sans-serif;
+font-weight: 500;
+outline: none;
+background: transparent;
+cursor: text;
+min-height: 32px;
+}
+
+.field-value[contenteditable=“true”]:empty::before {
+content: attr(data-placeholder);
+color: rgba(255,255,255,0.35);
+font-style: italic;
+font-size: 11px;
+}
+
+/* 日付フィールドは編集不可 */
+.field-value.readonly {
+cursor: default;
+}
+
+/* UI オーバーレイ */
+#ui-overlay {
+position: absolute;
+bottom: 0;
+left: 0;
+right: 0;
+display: flex;
+flex-direction: column;
+align-items: center;
+padding-bottom: 30px;
+pointer-events: none;
+}
+
+#controls {
+display: flex;
+gap: 20px;
+align-items: center;
+pointer-events: all;
+}
+
+.ctrl-btn {
+background: rgba(255,255,255,0.15);
+border: 2px solid rgba(255,255,255,0.6);
+color: #fff;
+border-radius: 50px;
+padding: 10px 20px;
+font-family: ‘Noto Sans JP’, sans-serif;
+font-size: 13px;
+font-weight: 700;
+cursor: pointer;
+letter-spacing: 1px;
+backdrop-filter: blur(10px);
+transition: all 0.2s;
+-webkit-tap-highlight-color: transparent;
+}
+
+.ctrl-btn:active {
+background: rgba(255,255,255,0.35);
+transform: scale(0.95);
+}
+
+#shutter-btn {
+width: 72px;
+height: 72px;
+border-radius: 50%;
+background: rgba(255,255,255,0.9);
+border: 4px solid #fff;
+box-shadow: 0 0 0 4px rgba(255,255,255,0.3);
+cursor: pointer;
+transition: all 0.15s;
+-webkit-tap-highlight-color: transparent;
+pointer-events: all;
+}
+
+#shutter-btn:active {
+transform: scale(0.9);
+background: rgba(200,200,200,0.9);
+}
+
+/* サイズ変更ハンドル */
+#resize-handle {
+position: absolute;
+bottom: 0;
+right: 0;
+width: 18px;
+height: 18px;
+cursor: se-resize;
+touch-action: none;
+}
+
+#resize-handle::after {
+content: ‘’;
+position: absolute;
+bottom: 3px;
+right: 3px;
+width: 10px;
+height: 10px;
+border-right: 2px solid rgba(255,255,255,0.7);
+border-bottom: 2px solid rgba(255,255,255,0.7);
+}
+
+/* カメラ起動待ち */
+#start-screen {
+position: absolute;
+inset: 0;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+background: #1a1a1a;
+color: #fff;
+gap: 20px;
+z-index: 100;
+}
+
+#start-screen h1 {
+font-family: ‘Noto Serif JP’, serif;
+font-size: 22px;
+letter-spacing: 4px;
+color: #7ec87a;
+}
+
+#start-screen p {
+font-size: 14px;
+color: rgba(255,255,255,0.6);
+letter-spacing: 1px;
+}
+
+#start-btn {
+background: #2d5a27;
+border: 2px solid #7ec87a;
+color: #fff;
+border-radius: 50px;
+padding: 14px 36px;
+font-family: ‘Noto Sans JP’, sans-serif;
+font-size: 15px;
+font-weight: 700;
+cursor: pointer;
+letter-spacing: 2px;
+transition: all 0.2s;
+-webkit-tap-highlight-color: transparent;
+}
+
+#start-btn:active { background: #3d7a35; }
+
+/* プレビュー */
+#preview-overlay {
+display: none;
+position: absolute;
+inset: 0;
+background: rgba(0,0,0,0.85);
+z-index: 200;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+gap: 20px;
+}
+
+#preview-overlay.show { display: flex; }
+
+#preview-img {
+max-width: 92vw;
+max-height: 65vh;
+border: 3px solid #fff;
+border-radius: 4px;
+box-shadow: 0 8px 40px rgba(0,0,0,0.8);
+}
+
+#preview-btns {
+display: flex;
+gap: 16px;
+}
+
+.preview-btn {
+background: rgba(255,255,255,0.15);
+border: 2px solid rgba(255,255,255,0.7);
+color: #fff;
+border-radius: 50px;
+padding: 12px 28px;
+font-family: ‘Noto Sans JP’, sans-serif;
+font-size: 14px;
+font-weight: 700;
+cursor: pointer;
+letter-spacing: 1px;
+-webkit-tap-highlight-color: transparent;
+transition: all 0.2s;
+}
+
+.preview-btn.primary {
+background: #2d5a27;
+border-color: #7ec87a;
+}
+
+.preview-btn:active { transform: scale(0.95); }
+
+/* カメラ切替ボタン */
+#flip-btn {
+position: absolute;
+top: 16px;
+right: 16px;
+background: rgba(0,0,0,0.4);
+border: 2px solid rgba(255,255,255,0.6);
+color: #fff;
+width: 44px;
+height: 44px;
+border-radius: 50%;
+font-size: 20px;
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+backdrop-filter: blur(6px);
+-webkit-tap-highlight-color: transparent;
+pointer-events: all;
+z-index: 50;
+transition: all 0.2s;
+}
+
+#flip-btn:active { transform: scale(0.9); }
+
+/* ヒント */
+#hint {
+position: absolute;
+top: 16px;
+left: 16px;
+background: rgba(0,0,0,0.45);
+color: rgba(255,255,255,0.7);
+font-size: 11px;
+padding: 6px 12px;
+border-radius: 20px;
+letter-spacing: 0.5px;
+pointer-events: none;
+backdrop-filter: blur(6px);
+}
+
+@media (max-width: 400px) {
+#blackboard { width: 260px; }
+.field-label { min-width: 60px; max-width: 60px; font-size: 9px; }
+}
+</style>
+
+</head>
+<body>
+
+<div id="camera-container">
+  <video id="video" autoplay playsinline muted></video>
+  <canvas id="canvas"></canvas>
+
+  <!-- 黒板 -->
+
+  <div id="blackboard">
+    <div class="board-title">工　事　黒　板</div>
+    <div class="board-fields">
+      <div class="field-row">
+        <div class="field-label">作業項目</div>
+        <div class="field-value" contenteditable="true" data-placeholder="入力してください" id="f-work"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-label">現場名</div>
+        <div class="field-value" contenteditable="true" data-placeholder="入力してください" id="f-site"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-label">施工業者名</div>
+        <div class="field-value" contenteditable="true" data-placeholder="入力してください" id="f-company"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-label">日　付</div>
+        <div class="field-value readonly" id="f-date"></div>
+      </div>
+    </div>
+    <div id="resize-handle"></div>
+  </div>
+
+  <!-- ヒント -->
+
+  <div id="hint">黒板をドラッグして移動</div>
+
+  <!-- カメラ切替 -->
+
+<button id="flip-btn" title="カメラ切替">🔄</button>
+
+  <!-- シャッター UI -->
+
+  <div id="ui-overlay">
+    <div id="controls">
+      <button class="ctrl-btn" id="size-btn">サイズ</button>
+      <button id="shutter-btn"></button>
+      <button class="ctrl-btn" id="opacity-btn">透明度</button>
+    </div>
+  </div>
+
+  <!-- スタート画面 -->
+
+  <div id="start-screen">
+    <h1>現場黒板</h1>
+    <p>工事写真撮影アプリ</p>
+    <button id="start-btn" onclick="startCamera()">カメラを起動する</button>
+  </div>
+
+  <!-- プレビュー -->
+
+  <div id="preview-overlay">
+    <img id="preview-img" alt="撮影プレビュー">
+    <div id="preview-btns">
+      <button class="preview-btn" onclick="closePreview()">撮り直す</button>
+      <button class="preview-btn primary" onclick="savePhoto()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 日付設定
+  const today = new Date();
+  const y = today.getFullYear();
+  const m = String(today.getMonth()+1).padStart(2,'0');
+  const d = String(today.getDate()).padStart(2,'0');
+  const weekdays = ['日','月','火','水','木','金','土'];
+  const w = weekdays[today.getDay()];
+  document.getElementById('f-date').textContent = `${y}年${m}月${d}日（${w}）`;
+
+  // カメラ
+  let stream = null;
+  let facingMode = 'environment';
+  const video = document.getElementById('video');
+  const canvas = document.getElementById('canvas');
+
+  async function startCamera() {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
+        audio: false
+      });
+      video.srcObject = stream;
+      document.getElementById('start-screen').style.display = 'none';
+    } catch(e) {
+      alert('カメラへのアクセスが許可されていません。\n設定からカメラの使用を許可してください。');
+    }
+  }
+
+  document.getElementById('flip-btn').addEventListener('click', async () => {
+    facingMode = facingMode === 'environment' ? 'user' : 'environment';
+    if(stream) {
+      stream.getTracks().forEach(t => t.stop());
+      await startCamera();
+    }
+  });
+
+  // サイズ切替
+  const sizes = [
+    {w: 220, label: '小'},
+    {w: 320, label: '中'},
+    {w: 420, label: '大'},
+  ];
+  let sizeIdx = 1;
+  document.getElementById('size-btn').addEventListener('click', () => {
+    sizeIdx = (sizeIdx+1) % sizes.length;
+    const bb = document.getElementById('blackboard');
+    bb.style.width = sizes[sizeIdx].w + 'px';
+    document.getElementById('size-btn').textContent = 'サイズ：' + sizes[sizeIdx].label;
+  });
+
+  // 透明度切替
+  const opacities = [1, 0.85, 0.65, 0.45];
+  let opIdx = 0;
+  document.getElementById('opacity-btn').addEventListener('click', () => {
+    opIdx = (opIdx+1) % opacities.length;
+    document.getElementById('blackboard').style.opacity = opacities[opIdx];
+    document.getElementById('opacity-btn').textContent =
+      opIdx === 0 ? '透明度' : `透明度${Math.round(opacities[opIdx]*100)}%`;
+  });
+
+  // ドラッグ（マウス＋タッチ）
+  const bb = document.getElementById('blackboard');
+  let dragging = false, startX, startY, origX, origY;
+  let isDraggableTarget = true;
+
+  bb.addEventListener('mousedown', (e) => {
+    if(e.target.isContentEditable || e.target.closest('[contenteditable]')) return;
+    if(e.target === document.getElementById('resize-handle')) return;
+    dragging = true;
+    startX = e.clientX; startY = e.clientY;
+    origX = bb.offsetLeft; origY = bb.offsetTop;
+    bb.classList.add('dragging');
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if(!dragging) return;
+    move(e.clientX - startX, e.clientY - startY);
+  });
+
+  document.addEventListener('mouseup', () => {
+    dragging = false;
+    bb.classList.remove('dragging');
+  });
+
+  bb.addEventListener('touchstart', (e) => {
+    if(e.target.isContentEditable || e.target.closest('[contenteditable]')) return;
+    if(e.target === document.getElementById('resize-handle')) return;
+    const t = e.touches[0];
+    dragging = true;
+    startX = t.clientX; startY = t.clientY;
+    origX = bb.offsetLeft; origY = bb.offsetTop;
+    bb.classList.add('dragging');
+  }, {passive: true});
+
+  document.addEventListener('touchmove', (e) => {
+    if(!dragging) return;
+    const t = e.touches[0];
+    move(t.clientX - startX, t.clientY - startY);
+    e.preventDefault();
+  }, {passive: false});
+
+  document.addEventListener('touchend', () => {
+    dragging = false;
+    bb.classList.remove('dragging');
+  });
+
+  function move(dx, dy) {
+    const cont = document.getElementById('camera-container');
+    const maxX = cont.offsetWidth - bb.offsetWidth;
+    const maxY = cont.offsetHeight - bb.offsetHeight;
+    let nx = Math.max(0, Math.min(maxX, origX + dx));
+    let ny = Math.max(0, Math.min(maxY, origY + dy));
+    bb.style.left = nx + 'px';
+    bb.style.top = ny + 'px';
+  }
+
+  // リサイズハンドル
+  const rh = document.getElementById('resize-handle');
+  let resizing = false, rsStartX, rsStartY, rsOrigW, rsOrigH;
+
+  rh.addEventListener('mousedown', (e) => {
+    resizing = true;
+    rsStartX = e.clientX; rsStartY = e.clientY;
+    rsOrigW = bb.offsetWidth; rsOrigH = bb.offsetHeight;
+    e.preventDefault(); e.stopPropagation();
+  });
+
+  rh.addEventListener('touchstart', (e) => {
+    resizing = true;
+    const t = e.touches[0];
+    rsStartX = t.clientX; rsStartY = t.clientY;
+    rsOrigW = bb.offsetWidth; rsOrigH = bb.offsetHeight;
+    e.stopPropagation();
+  }, {passive: true});
+
+  document.addEventListener('mousemove', (e) => {
+    if(!resizing) return;
+    const nw = Math.max(180, rsOrigW + (e.clientX - rsStartX));
+    bb.style.width = nw + 'px';
+  });
+
+  document.addEventListener('touchmove', (e) => {
+    if(!resizing) return;
+    const t = e.touches[0];
+    const nw = Math.max(180, rsOrigW + (t.clientX - rsStartX));
+    bb.style.width = nw + 'px';
+  }, {passive: true});
+
+  document.addEventListener('mouseup', () => { resizing = false; });
+  document.addEventListener('touchend', () => { resizing = false; });
+
+  // シャッター
+  let capturedDataUrl = null;
+
+  document.getElementById('shutter-btn').addEventListener('click', () => {
+    if(!stream) { alert('先にカメラを起動してください'); return; }
+    
+    const cont = document.getElementById('camera-container');
+    const W = cont.offsetWidth;
+    const H = cont.offsetHeight;
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    // 映像描画
+    ctx.drawImage(video, 0, 0, W, H);
+
+    // 黒板描画
+    drawBlackboard(ctx);
+
+    capturedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
+    document.getElementById('preview-img').src = capturedDataUrl;
+    document.getElementById('preview-overlay').classList.add('show');
+  });
+
+  function drawBlackboard(ctx) {
+    const bbEl = document.getElementById('blackboard');
+    const x = bbEl.offsetLeft;
+    const y = bbEl.offsetTop;
+    const w = bbEl.offsetWidth;
+    const opacity = parseFloat(bbEl.style.opacity || 1);
+
+    ctx.save();
+    ctx.globalAlpha = opacity;
+
+    // 背景
+    ctx.fillStyle = '#2d5a27';
+    ctx.fillRect(x, y, w, bbEl.offsetHeight);
+
+    // 木目ライン
+    ctx.globalAlpha = opacity * 0.04;
+    for(let i = 0; i < bbEl.offsetHeight; i += 29) {
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(x, y+i, w, 1);
+    }
+    ctx.globalAlpha = opacity;
+
+    // 外枠
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(x+1.5, y+1.5, w-3, bbEl.offsetHeight-3);
+
+    // タイトル
+    const titleH = 28;
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.fillRect(x, y, w, titleH);
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x, y+titleH); ctx.lineTo(x+w, y+titleH); ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.font = `600 13px "Noto Serif JP", serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText('工　事　黒　板', x + w/2, y + titleH - 8);
+
+    // フィールド
+    const fields = [
+      { label: '作業項目', val: document.getElementById('f-work').textContent },
+      { label: '現場名',   val: document.getElementById('f-site').textContent },
+      { label: '施工業者名', val: document.getElementById('f-company').textContent },
+      { label: '日　付',   val: document.getElementById('f-date').textContent },
+    ];
+
+    let fy = y + titleH + 8;
+    const pad = 10;
+    const labelW = 72;
+    const rowH = 36;
+
+    fields.forEach(f => {
+      // 行枠
+      ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(x + pad, fy, w - pad*2, rowH);
+
+      // ラベル背景
+      ctx.fillStyle = 'rgba(0,0,0,0.2)';
+      ctx.fillRect(x + pad, fy, labelW, rowH);
+
+      // ラベル区切り線
+      ctx.beginPath();
+      ctx.moveTo(x + pad + labelW, fy);
+      ctx.lineTo(x + pad + labelW, fy + rowH);
+      ctx.stroke();
+
+      // ラベルテキスト
+      ctx.fillStyle = '#fff';
+      ctx.font = `700 10px "Noto Sans JP", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText(f.label, x + pad + labelW/2, fy + rowH/2 + 4);
+
+      // 値テキスト
+      ctx.font = `500 12px "Noto Sans JP", sans-serif`;
+      ctx.textAlign = 'left';
+      ctx.fillText(f.val, x + pad + labelW + 8, fy + rowH/2 + 4);
+
+      fy += rowH + 6;
+    });
+
+    ctx.restore();
+  }
+
+  function closePreview() {
+    document.getElementById('preview-overlay').classList.remove('show');
+    capturedDataUrl = null;
+  }
+
+  function savePhoto() {
+    if(!capturedDataUrl) return;
+    const a = document.createElement('a');
+    const ts = new Date().toISOString().replace(/[:.]/g,'-').slice(0,19);
+    a.download = `現場写真_${ts}.jpg`;
+    a.href = capturedDataUrl;
+    a.click();
+    closePreview();
+  }
+</script>
+
+</body>
+</html>
