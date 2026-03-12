@@ -8,290 +8,378 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@600&display=swap');
 
-- { margin:0; padding:0; box-sizing:border-box; }
+- { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
 font-family: ‘Noto Sans JP’, sans-serif;
 background: #1a1a1a;
 overflow: hidden;
-height: 100vh; width: 100vw;
+height: 100vh;
+width: 100vw;
 user-select: none;
 }
 
 #camera-container {
 position: relative;
-width: 100vw; height: 100vh;
+width: 100vw;
+height: 100vh;
 background: #2a2a2a;
 overflow: hidden;
 }
 
-#video { width:100%; height:100%; object-fit:cover; display:block; }
-#canvas { display:none; }
+#video {
+width: 100%;
+height: 100%;
+object-fit: cover;
+display: block;
+}
 
-/* ══════════════════════════════
-黒板本体
-══════════════════════════════ */
+#canvas { display: none; }
+
+/* ── 黒板 ── */
 #blackboard {
 position: absolute;
-width: 300px;
-background: #1f6b5e;
+width: 360px; /* 横長 */
+background: #2d5a27;
 border: 2.5px solid #fff;
+border-radius: 3px;
 cursor: grab;
-top: 60px; left: 20px;
+top: 60px;
+left: 24px;
 touch-action: none;
-box-shadow: 0 4px 24px rgba(0,0,0,0.7), inset 0 0 30px rgba(0,0,0,0.2);
+box-shadow:
+inset 0 0 24px rgba(0,0,0,0.3),
+0 4px 20px rgba(0,0,0,0.6),
+2px 2px 0 rgba(255,255,255,0.1);
+background-image:
+repeating-linear-gradient(
+0deg, transparent, transparent 22px,
+rgba(255,255,255,0.03) 22px, rgba(255,255,255,0.03) 23px
+);
 }
 
-#blackboard.dragging { cursor:grabbing; opacity:.92; }
-
-/* ── 上部2行（工事名・工事場所） ── */
-.bb-top { border-bottom: 2px solid #fff; }
-
-.bb-row {
-display: flex;
-align-items: stretch;
-border-bottom: 2px solid #fff;
+#blackboard.dragging {
+cursor: grabbing;
+opacity: 0.92;
+box-shadow: inset 0 0 24px rgba(0,0,0,0.3), 0 12px 40px rgba(0,0,0,0.8);
 }
-.bb-row:last-child { border-bottom: none; }
 
-.bb-label {
-background: rgba(0,0,0,0.15);
-color: #fff;
-font-size: 11px;
-font-weight: 700;
-letter-spacing: 1px;
-min-width: 68px; max-width: 68px;
-display: flex; align-items: center; justify-content: center;
-border-right: 2px solid #fff;
-text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
-padding: 4px 2px;
+.board-title {
+background: rgba(0,0,0,0.25);
 text-align: center;
-line-height: 1.3;
+padding: 5px 6px;
+border-bottom: 1.5px solid #fff;
+font-family: ‘Noto Serif JP’, serif;
+font-size: 10px;
+font-weight: 600;
+color: #fff;
+letter-spacing: 2px;
+text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
 }
 
-.bb-val {
+.board-fields { padding: 0; }
+
+.field-row {
+display: flex;
+border: 0;
+border-top: 1.5px solid rgba(255,255,255,0.85);
+margin-bottom: 0;
+min-height: 28px;
+}
+
+/* 作業項目は高さ大きめ */
+.field-row.row-work { min-height: 46px; }
+
+.field-row:last-child { margin-bottom: 0; }
+
+.field-label {
+background: rgba(0,0,0,0.2);
+color: #fff;
+font-size: 8px;
+font-weight: 700;
+padding: 2px 0;
+display: flex;
+align-items: center;
+justify-content: center;
+min-width: 52px;
+max-width: 52px;
+border-right: 1.5px solid rgba(255,255,255,0.85);
+letter-spacing: 0.5px;
+line-height: 1.3;
+text-align: center;
+text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+white-space: pre-line;
+}
+
+.field-value {
 flex: 1;
 color: #fff;
-font-size: 12px;
+font-size: 10px;
+padding: 2px 5px;
+display: flex;
+align-items: center;
+word-break: break-all;
+line-height: 1.4;
+text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+font-family: ‘Noto Sans JP’, sans-serif;
 font-weight: 500;
-padding: 4px 8px;
 outline: none;
 background: transparent;
 cursor: text;
-display: flex; align-items: center;
-text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-word-break: break-all;
-line-height: 1.4;
+min-height: 26px;
 }
 
-.bb-val[contenteditable=“true”]:empty::before {
+.field-value[contenteditable=“true”]:empty::before {
 content: attr(data-placeholder);
 color: rgba(255,255,255,0.35);
 font-style: italic;
-font-size: 11px;
+font-size: 9px;
 }
 
-/* ── 中央大エリア ── */
-.bb-main {
-border-bottom: 2px solid #fff;
-display: flex;
-flex-direction: column;
-align-items: stretch;
-}
+.field-value.readonly { cursor: default; }
 
-.bb-main-text {
-color: #fff;
-font-size: 22px;
-font-weight: 700;
-text-align: center;
-padding: 8px 10px 2px;
-outline: none;
-background: transparent;
-cursor: text;
-width: 100%;
-text-shadow: 1px 1px 3px rgba(0,0,0,0.35);
-line-height: 1.4;
-word-break: break-all;
-}
-
-.bb-main-text[contenteditable=“true”]:empty::before {
-content: attr(data-placeholder);
-color: rgba(255,255,255,0.3);
-font-style: italic;
-font-size: 13px;
-}
-
-/* 日付：右寄せ通常フロー */
-.bb-date {
-text-align: right;
-padding: 0 8px 5px;
-color: #fff;
-font-size: 10px;
-letter-spacing: 1px;
-text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
-pointer-events: none;
-}
-
-/* ── 下部（施工者） ── */
-.bb-bottom { /* bb-rowと同じ構造 */ }
-
-/* 業者名ラジオ選択 */
-.bb-company-wrap {
+/* 業者名セレクト行 */
+.company-wrapper {
 flex: 1;
 display: flex;
 flex-direction: column;
 justify-content: center;
-padding: 3px 7px;
+padding: 2px 5px;
 gap: 2px;
 }
 
-.bb-co-options { display:flex; flex-direction:column; gap:2px; }
+/* ラジオボタン風セレクタ */
+.company-options {
+display: flex;
+flex-direction: column;
+gap: 2px;
+}
 
-.bb-co-opt {
-display: flex; align-items: center; gap: 5px;
+.company-option {
+display: flex;
+align-items: center;
+gap: 4px;
 cursor: pointer;
 }
 
-.bb-co-opt input[type=“radio”] {
-appearance: none; -webkit-appearance: none;
-width: 9px; height: 9px;
-border: 1.5px solid rgba(255,255,255,0.75);
-border-radius: 50%; flex-shrink: 0;
-cursor: pointer; transition: background .15s;
+.company-option input[type=“radio”] {
+appearance: none;
+-webkit-appearance: none;
+width: 8px;
+height: 8px;
+border: 1.5px solid rgba(255,255,255,0.7);
+border-radius: 50%;
+flex-shrink: 0;
+cursor: pointer;
+position: relative;
+transition: background .15s;
 }
 
-.bb-co-opt input[type=“radio”]:checked {
-background: #fff; border-color: #fff;
+.company-option input[type=“radio”]:checked {
+background: #fff;
+border-color: #fff;
 }
 
-.bb-co-opt label {
-font-size: 11px; color: #fff; cursor: pointer;
+.company-option label {
+font-size: 9px;
+color: #fff;
+cursor: pointer;
 font-weight: 500;
 text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-line-height: 1.4;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+max-width: 130px;
+line-height: 1.3;
 }
 
+/* その他の手入力エリア */
 #company-other-input {
 display: none;
 background: rgba(255,255,255,0.12);
 border: 1px solid rgba(255,255,255,0.5);
 border-radius: 2px;
-color: #fff; font-size: 11px;
+color: #fff;
+font-size: 9px;
 font-family: ‘Noto Sans JP’, sans-serif;
-padding: 2px 6px; outline: none; width: 100%;
+padding: 2px 5px;
+outline: none;
+width: 100%;
+margin-top: 2px;
 }
 
-#company-other-input::placeholder { color: rgba(255,255,255,0.35); font-style:italic; }
-#company-other-input:focus { border-color: rgba(255,255,255,0.8); background: rgba(255,255,255,0.18); }
+#company-other-input::placeholder {
+color: rgba(255,255,255,0.35);
+font-style: italic;
+}
+
+#company-other-input:focus {
+border-color: rgba(255,255,255,0.8);
+background: rgba(255,255,255,0.18);
+}
 
 /* リサイズハンドル */
 #resize-handle {
-position: absolute; bottom:0; right:0;
-width:18px; height:18px;
-cursor: se-resize; touch-action:none;
+position: absolute;
+bottom: 0; right: 0;
+width: 16px; height: 16px;
+cursor: se-resize;
+touch-action: none;
 }
+
 #resize-handle::after {
-content:’’; position:absolute; bottom:3px; right:3px;
-width:10px; height:10px;
-border-right:2px solid rgba(255,255,255,0.6);
-border-bottom:2px solid rgba(255,255,255,0.6);
+content: ‘’;
+position: absolute;
+bottom: 3px; right: 3px;
+width: 8px; height: 8px;
+border-right: 2px solid rgba(255,255,255,0.6);
+border-bottom: 2px solid rgba(255,255,255,0.6);
 }
 
-/* ══════════════════════════════
-UI
-══════════════════════════════ */
+/* UI オーバーレイ */
 #ui-overlay {
-position:absolute; bottom:0; left:0; right:0;
-display:flex; flex-direction:column; align-items:center;
-padding-bottom:30px; pointer-events:none;
+position: absolute;
+bottom: 0; left: 0; right: 0;
+display: flex;
+flex-direction: column;
+align-items: center;
+padding-bottom: 30px;
+pointer-events: none;
 }
 
-#controls { display:flex; gap:20px; align-items:center; pointer-events:all; }
+#controls {
+display: flex;
+gap: 20px;
+align-items: center;
+pointer-events: all;
+}
 
 .ctrl-btn {
 background: rgba(255,255,255,0.15);
 border: 2px solid rgba(255,255,255,0.6);
-color: #fff; border-radius:50px;
-padding:10px 20px;
-font-family:‘Noto Sans JP’,sans-serif;
-font-size:13px; font-weight:700;
-cursor:pointer; letter-spacing:1px;
-backdrop-filter:blur(10px);
-transition:all .2s;
--webkit-tap-highlight-color:transparent;
+color: #fff;
+border-radius: 50px;
+padding: 10px 20px;
+font-family: ‘Noto Sans JP’, sans-serif;
+font-size: 13px;
+font-weight: 700;
+cursor: pointer;
+letter-spacing: 1px;
+backdrop-filter: blur(10px);
+transition: all 0.2s;
+-webkit-tap-highlight-color: transparent;
 }
-.ctrl-btn:active { background:rgba(255,255,255,0.35); transform:scale(.95); }
+
+.ctrl-btn:active { background: rgba(255,255,255,0.35); transform: scale(0.95); }
 
 #shutter-btn {
-width:72px; height:72px; border-radius:50%;
-background:rgba(255,255,255,0.9); border:4px solid #fff;
-box-shadow:0 0 0 4px rgba(255,255,255,0.3);
-cursor:pointer; transition:all .15s;
--webkit-tap-highlight-color:transparent; pointer-events:all;
+width: 72px; height: 72px;
+border-radius: 50%;
+background: rgba(255,255,255,0.9);
+border: 4px solid #fff;
+box-shadow: 0 0 0 4px rgba(255,255,255,0.3);
+cursor: pointer;
+transition: all 0.15s;
+-webkit-tap-highlight-color: transparent;
+pointer-events: all;
 }
-#shutter-btn:active { transform:scale(.9); background:rgba(200,200,200,0.9); }
 
+#shutter-btn:active { transform: scale(0.9); background: rgba(200,200,200,0.9); }
+
+/* カメラ切替 */
 #flip-btn {
-position:absolute; top:16px; right:16px;
-background:rgba(0,0,0,0.4); border:2px solid rgba(255,255,255,0.6);
-color:#fff; width:44px; height:44px; border-radius:50%;
-font-size:20px; cursor:pointer;
-display:flex; align-items:center; justify-content:center;
-backdrop-filter:blur(6px);
--webkit-tap-highlight-color:transparent;
-pointer-events:all; z-index:50; transition:all .2s;
+position: absolute;
+top: 16px; right: 16px;
+background: rgba(0,0,0,0.4);
+border: 2px solid rgba(255,255,255,0.6);
+color: #fff;
+width: 44px; height: 44px;
+border-radius: 50%;
+font-size: 20px;
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+backdrop-filter: blur(6px);
+-webkit-tap-highlight-color: transparent;
+pointer-events: all;
+z-index: 50;
+transition: all 0.2s;
 }
-#flip-btn:active { transform:scale(.9); }
 
+#flip-btn:active { transform: scale(0.9); }
+
+/* ヒント */
 #hint {
-position:absolute; top:16px; left:16px;
-background:rgba(0,0,0,0.45); color:rgba(255,255,255,0.7);
-font-size:11px; padding:6px 12px; border-radius:20px;
-letter-spacing:.5px; pointer-events:none; backdrop-filter:blur(6px);
+position: absolute;
+top: 16px; left: 16px;
+background: rgba(0,0,0,0.45);
+color: rgba(255,255,255,0.7);
+font-size: 11px;
+padding: 6px 12px;
+border-radius: 20px;
+letter-spacing: 0.5px;
+pointer-events: none;
+backdrop-filter: blur(6px);
 }
 
 /* スタート画面 */
 #start-screen {
-position:absolute; inset:0;
-display:flex; flex-direction:column; align-items:center; justify-content:center;
-background:#1a1a1a; color:#fff; gap:20px; z-index:100;
+position: absolute; inset: 0;
+display: flex; flex-direction: column;
+align-items: center; justify-content: center;
+background: #1a1a1a; color: #fff;
+gap: 20px; z-index: 100;
 }
+
 #start-screen h1 {
-font-family:‘Noto Serif JP’,serif; font-size:22px;
-letter-spacing:4px; color:#7ec87a;
+font-family: ‘Noto Serif JP’, serif;
+font-size: 22px; letter-spacing: 4px; color: #7ec87a;
 }
-#start-screen p { font-size:14px; color:rgba(255,255,255,0.6); letter-spacing:1px; }
+
+#start-screen p { font-size: 14px; color: rgba(255,255,255,0.6); letter-spacing: 1px; }
+
 #start-btn {
-background:#2d5a27; border:2px solid #7ec87a; color:#fff;
-border-radius:50px; padding:14px 36px;
-font-family:‘Noto Sans JP’,sans-serif;
-font-size:15px; font-weight:700; cursor:pointer; letter-spacing:2px;
--webkit-tap-highlight-color:transparent;
+background: #2d5a27; border: 2px solid #7ec87a; color: #fff;
+border-radius: 50px; padding: 14px 36px;
+font-family: ‘Noto Sans JP’, sans-serif;
+font-size: 15px; font-weight: 700; cursor: pointer; letter-spacing: 2px;
+transition: all 0.2s; -webkit-tap-highlight-color: transparent;
 }
-#start-btn:active { background:#3d7a35; }
+
+#start-btn:active { background: #3d7a35; }
 
 /* プレビュー */
 #preview-overlay {
-display:none; position:absolute; inset:0;
-background:rgba(0,0,0,0.85); z-index:200;
-flex-direction:column; align-items:center; justify-content:center; gap:20px;
+display: none; position: absolute; inset: 0;
+background: rgba(0,0,0,0.85); z-index: 200;
+flex-direction: column; align-items: center; justify-content: center; gap: 20px;
 }
-#preview-overlay.show { display:flex; }
+
+#preview-overlay.show { display: flex; }
+
 #preview-img {
-max-width:92vw; max-height:65vh;
-border:3px solid #fff; border-radius:4px;
-box-shadow:0 8px 40px rgba(0,0,0,0.8);
+max-width: 92vw; max-height: 65vh;
+border: 3px solid #fff; border-radius: 4px;
+box-shadow: 0 8px 40px rgba(0,0,0,0.8);
 }
-#preview-btns { display:flex; gap:16px; }
+
+#preview-btns { display: flex; gap: 16px; }
+
 .preview-btn {
-background:rgba(255,255,255,0.15); border:2px solid rgba(255,255,255,0.7);
-color:#fff; border-radius:50px; padding:12px 28px;
-font-family:‘Noto Sans JP’,sans-serif; font-size:14px; font-weight:700;
-cursor:pointer; letter-spacing:1px;
--webkit-tap-highlight-color:transparent; transition:all .2s;
+background: rgba(255,255,255,0.15);
+border: 2px solid rgba(255,255,255,0.7);
+color: #fff; border-radius: 50px;
+padding: 12px 28px;
+font-family: ‘Noto Sans JP’, sans-serif;
+font-size: 14px; font-weight: 700;
+cursor: pointer; letter-spacing: 1px;
+-webkit-tap-highlight-color: transparent;
+transition: all 0.2s;
 }
-.preview-btn.primary { background:#2d5a27; border-color:#7ec87a; }
-.preview-btn:active { transform:scale(.95); }
+
+.preview-btn.primary { background: #2d5a27; border-color: #7ec87a; }
+.preview-btn:active { transform: scale(0.95); }
 </style>
 
 </head>
@@ -301,59 +389,59 @@ cursor:pointer; letter-spacing:1px;
   <video id="video" autoplay playsinline muted></video>
   <canvas id="canvas"></canvas>
 
-  <!-- ══ 黒板 ══ -->
+  <!-- 黒板 -->
 
   <div id="blackboard">
+    <div class="board-title">工　事　黒　板</div>
+    <div class="board-fields">
 
 ```
-<!-- 工事名 -->
-<div class="bb-row">
-  <div class="bb-label">工事名</div>
-  <div class="bb-val" contenteditable="true" data-placeholder="入力" id="f-work"></div>
-</div>
+  <div class="field-row row-work">
+    <div class="field-label">作業項目</div>
+    <div class="field-value" contenteditable="true" data-placeholder="入力" id="f-work" style="font-size:11px; align-items:flex-start; padding-top:5px;"></div>
+  </div>
 
-<!-- 工事場所 -->
-<div class="bb-row">
-  <div class="bb-label">工事場所</div>
-  <div class="bb-val" contenteditable="true" data-placeholder="入力" id="f-site"></div>
-</div>
+  <div class="field-row">
+    <div class="field-label">現場名</div>
+    <div class="field-value" contenteditable="true" data-placeholder="入力" id="f-site"></div>
+  </div>
 
-<!-- 中央大エリア（作業内容） -->
-<div class="bb-main">
-  <div class="bb-main-text" contenteditable="true" data-placeholder="作業内容を入力" id="f-main"></div>
-  <div class="bb-date" id="f-date"></div>
-</div>
-
-<!-- 施工者 -->
-<div class="bb-row bb-bottom">
-  <div class="bb-label">施工者</div>
-  <div class="bb-company-wrap">
-    <div class="bb-co-options">
-      <div class="bb-co-opt">
-        <input type="radio" name="company" value="井上電工株式会社" id="co1">
-        <label for="co1">井上電工株式会社</label>
+  <!-- 施工業者名：選択式 -->
+  <div class="field-row">
+    <div class="field-label">施工業者名</div>
+    <div class="company-wrapper">
+      <div class="company-options">
+        <label class="company-option">
+          <input type="radio" name="company" value="井上電工株式会社" id="co1">
+          <label for="co1">井上電工株式会社</label>
+        </label>
+        <label class="company-option">
+          <input type="radio" name="company" value="(株)山産" id="co2">
+          <label for="co2">(株)山産</label>
+        </label>
+        <label class="company-option">
+          <input type="radio" name="company" value="other" id="co3">
+          <label for="co3">その他</label>
+        </label>
       </div>
-      <div class="bb-co-opt">
-        <input type="radio" name="company" value="(株)山産" id="co2">
-        <label for="co2">(株)山産</label>
-      </div>
-      <div class="bb-co-opt">
-        <input type="radio" name="company" value="other" id="co3">
-        <label for="co3">その他</label>
-      </div>
+      <input type="text" id="company-other-input" placeholder="業者名を入力">
     </div>
-    <input type="text" id="company-other-input" placeholder="業者名を入力">
   </div>
-</div>
 
-<div id="resize-handle"></div>
+  <div class="field-row" style="position:relative;">
+    <div class="field-label">日　付</div>
+    <div class="field-value readonly" id="f-date"></div>
+    <div id="resize-handle"></div>
+  </div>
+
+</div>
 ```
 
   </div>
-  <!-- ══ /黒板 ══ -->
 
   <div id="hint">黒板をドラッグして移動</div>
-  <button id="flip-btn">🔄</button>
+
+<button id="flip-btn" title="カメラ切替">🔄</button>
 
   <div id="ui-overlay">
     <div id="controls">
@@ -363,11 +451,15 @@ cursor:pointer; letter-spacing:1px;
     </div>
   </div>
 
+  <!-- スタート画面 -->
+
   <div id="start-screen">
     <h1>現場黒板</h1>
     <p>工事写真撮影アプリ</p>
     <button id="start-btn" onclick="startCamera()">カメラを起動する</button>
   </div>
+
+  <!-- プレビュー -->
 
   <div id="preview-overlay">
     <img id="preview-img" alt="撮影プレビュー">
@@ -379,37 +471,48 @@ cursor:pointer; letter-spacing:1px;
 </div>
 
 <script>
-  // 日付（令和変換）
+  // 日付
   const today = new Date();
   const y = today.getFullYear();
-  const m = today.getMonth()+1;
-  const d = today.getDate();
-  const reiwaNen = y - 2018;
-  document.getElementById('f-date').textContent = `令和${reiwaNen}年${m}月${d}日`;
+  const m = String(today.getMonth()+1).padStart(2,'0');
+  const d = String(today.getDate()).padStart(2,'0');
+  const w = ['日','月','火','水','木','金','土'][today.getDay()];
+  document.getElementById('f-date').textContent = `${y}年${m}月${d}日（${w}）`;
 
-  // 業者名
+  // 業者名セレクト
   const radios = document.querySelectorAll('input[name="company"]');
   const otherInput = document.getElementById('company-other-input');
-  radios.forEach(r => r.addEventListener('change', () => {
-    otherInput.style.display = r.value === 'other' ? 'block' : 'none';
-    if(r.value === 'other') otherInput.focus();
-  }));
 
+  radios.forEach(r => {
+    r.addEventListener('change', () => {
+      if(r.value === 'other') {
+        otherInput.style.display = 'block';
+        otherInput.focus();
+      } else {
+        otherInput.style.display = 'none';
+      }
+    });
+  });
+
+  // 現在の業者名を取得
   function getCompanyName() {
     const checked = document.querySelector('input[name="company"]:checked');
     if(!checked) return '';
-    return checked.value === 'other' ? (otherInput.value || '') : checked.value;
+    if(checked.value === 'other') return otherInput.value || '';
+    return checked.value;
   }
 
   // カメラ
-  let stream = null, facingMode = 'environment';
+  let stream = null;
+  let facingMode = 'environment';
   const video = document.getElementById('video');
   const canvas = document.getElementById('canvas');
 
   async function startCamera() {
     try {
       stream = await navigator.mediaDevices.getUserMedia({
-        video:{ facingMode, width:{ideal:1920}, height:{ideal:1080} }, audio:false
+        video: { facingMode, width:{ideal:1920}, height:{ideal:1080} },
+        audio: false
       });
       video.srcObject = stream;
       document.getElementById('start-screen').style.display = 'none';
@@ -420,221 +523,219 @@ cursor:pointer; letter-spacing:1px;
 
   document.getElementById('flip-btn').addEventListener('click', async () => {
     facingMode = facingMode === 'environment' ? 'user' : 'environment';
-    if(stream){ stream.getTracks().forEach(t=>t.stop()); await startCamera(); }
+    if(stream) { stream.getTracks().forEach(t => t.stop()); await startCamera(); }
   });
 
   // サイズ切替
-  const sizes = [{w:220,l:'小'},{w:300,l:'中'},{w:400,l:'大'}];
+  const sizes = [{w:260,label:'小'},{w:360,label:'中'},{w:460,label:'大'}];
   let sizeIdx = 1;
   document.getElementById('size-btn').addEventListener('click', () => {
     sizeIdx = (sizeIdx+1) % sizes.length;
-    bb.style.width = sizes[sizeIdx].w + 'px';
-    document.getElementById('size-btn').textContent = 'サイズ：' + sizes[sizeIdx].l;
+    document.getElementById('blackboard').style.width = sizes[sizeIdx].w + 'px';
+    document.getElementById('size-btn').textContent = 'サイズ：' + sizes[sizeIdx].label;
   });
 
-  // 透明度
+  // 透明度切替
   const opacities = [1, 0.85, 0.65, 0.45];
   let opIdx = 0;
   document.getElementById('opacity-btn').addEventListener('click', () => {
     opIdx = (opIdx+1) % opacities.length;
-    bb.style.opacity = opacities[opIdx];
+    document.getElementById('blackboard').style.opacity = opacities[opIdx];
     document.getElementById('opacity-btn').textContent =
-      opIdx===0 ? '透明度' : `透明度${Math.round(opacities[opIdx]*100)}%`;
+      opIdx === 0 ? '透明度' : `透明度${Math.round(opacities[opIdx]*100)}%`;
   });
 
   // ── ドラッグ ──
   const bb = document.getElementById('blackboard');
-  let dragging=false, startX, startY, origX, origY;
+  let dragging = false, startX, startY, origX, origY;
 
   function isEditable(el) {
-    return el.isContentEditable || el.closest('[contenteditable]')
-        || el.tagName==='INPUT' || el.tagName==='LABEL' || el.closest('label');
+    return el.isContentEditable
+      || el.closest('[contenteditable]')
+      || el.tagName === 'INPUT'
+      || el.tagName === 'LABEL'
+      || el.closest('label');
   }
 
   bb.addEventListener('mousedown', e => {
-    if(isEditable(e.target) || e.target.id==='resize-handle') return;
-    dragging=true; startX=e.clientX; startY=e.clientY;
-    origX=bb.offsetLeft; origY=bb.offsetTop;
+    if(isEditable(e.target) || e.target === document.getElementById('resize-handle')) return;
+    dragging = true;
+    startX = e.clientX; startY = e.clientY;
+    origX = bb.offsetLeft; origY = bb.offsetTop;
     bb.classList.add('dragging'); e.preventDefault();
   });
+
   document.addEventListener('mousemove', e => {
-    if(dragging) move(e.clientX-startX, e.clientY-startY);
+    if(!dragging) return;
+    move(e.clientX - startX, e.clientY - startY);
   });
-  document.addEventListener('mouseup', () => { dragging=false; bb.classList.remove('dragging'); });
+
+  document.addEventListener('mouseup', () => { dragging = false; bb.classList.remove('dragging'); });
 
   bb.addEventListener('touchstart', e => {
-    if(isEditable(e.target) || e.target.id==='resize-handle') return;
-    const t=e.touches[0]; dragging=true;
-    startX=t.clientX; startY=t.clientY;
-    origX=bb.offsetLeft; origY=bb.offsetTop;
+    if(isEditable(e.target) || e.target === document.getElementById('resize-handle')) return;
+    const t = e.touches[0];
+    dragging = true;
+    startX = t.clientX; startY = t.clientY;
+    origX = bb.offsetLeft; origY = bb.offsetTop;
     bb.classList.add('dragging');
-  },{passive:true});
+  }, {passive:true});
+
   document.addEventListener('touchmove', e => {
     if(!dragging) return;
-    move(e.touches[0].clientX-startX, e.touches[0].clientY-startY);
+    const t = e.touches[0];
+    move(t.clientX - startX, t.clientY - startY);
     e.preventDefault();
-  },{passive:false});
-  document.addEventListener('touchend', () => { dragging=false; bb.classList.remove('dragging'); });
+  }, {passive:false});
 
-  function move(dx,dy){
-    const cont=document.getElementById('camera-container');
-    bb.style.left = Math.max(0, Math.min(cont.offsetWidth-bb.offsetWidth,  origX+dx)) + 'px';
-    bb.style.top  = Math.max(0, Math.min(cont.offsetHeight-bb.offsetHeight, origY+dy)) + 'px';
+  document.addEventListener('touchend', () => { dragging = false; bb.classList.remove('dragging'); });
+
+  function move(dx, dy) {
+    const cont = document.getElementById('camera-container');
+    const maxX = cont.offsetWidth - bb.offsetWidth;
+    const maxY = cont.offsetHeight - bb.offsetHeight;
+    bb.style.left = Math.max(0, Math.min(maxX, origX + dx)) + 'px';
+    bb.style.top  = Math.max(0, Math.min(maxY, origY + dy)) + 'px';
   }
 
   // ── リサイズ ──
   const rh = document.getElementById('resize-handle');
-  let resizing=false, rsStartX, rsOrigW;
+  let resizing = false, rsStartX, rsOrigW;
+
   rh.addEventListener('mousedown', e => {
-    resizing=true; rsStartX=e.clientX; rsOrigW=bb.offsetWidth;
+    resizing = true;
+    rsStartX = e.clientX; rsOrigW = bb.offsetWidth;
     e.preventDefault(); e.stopPropagation();
   });
+
   rh.addEventListener('touchstart', e => {
-    resizing=true; rsStartX=e.touches[0].clientX; rsOrigW=bb.offsetWidth;
+    resizing = true;
+    rsStartX = e.touches[0].clientX; rsOrigW = bb.offsetWidth;
     e.stopPropagation();
-  },{passive:true});
+  }, {passive:true});
+
   document.addEventListener('mousemove', e => {
-    if(resizing) bb.style.width = Math.max(200, rsOrigW+(e.clientX-rsStartX))+'px';
+    if(!resizing) return;
+    bb.style.width = Math.max(160, rsOrigW + (e.clientX - rsStartX)) + 'px';
   });
+
   document.addEventListener('touchmove', e => {
-    if(resizing) bb.style.width = Math.max(200, rsOrigW+(e.touches[0].clientX-rsStartX))+'px';
-  },{passive:true});
-  document.addEventListener('mouseup',  () => { resizing=false; });
-  document.addEventListener('touchend', () => { resizing=false; });
+    if(!resizing) return;
+    bb.style.width = Math.max(160, rsOrigW + (e.touches[0].clientX - rsStartX)) + 'px';
+  }, {passive:true});
+
+  document.addEventListener('mouseup',  () => { resizing = false; });
+  document.addEventListener('touchend', () => { resizing = false; });
 
   // ── シャッター ──
   let capturedDataUrl = null;
 
   document.getElementById('shutter-btn').addEventListener('click', () => {
-    if(!stream){ alert('先にカメラを起動してください'); return; }
+    if(!stream) { alert('先にカメラを起動してください'); return; }
     const cont = document.getElementById('camera-container');
-    const W=cont.offsetWidth, H=cont.offsetHeight;
-    canvas.width=W; canvas.height=H;
+    const W = cont.offsetWidth, H = cont.offsetHeight;
+    canvas.width = W; canvas.height = H;
     const ctx = canvas.getContext('2d');
-    ctx.drawImage(video,0,0,W,H);
+    ctx.drawImage(video, 0, 0, W, H);
     drawBlackboard(ctx);
-    capturedDataUrl = canvas.toDataURL('image/jpeg',0.95);
+    capturedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
     document.getElementById('preview-img').src = capturedDataUrl;
     document.getElementById('preview-overlay').classList.add('show');
   });
 
-  // ── Canvas 黒板描画 ──
   function drawBlackboard(ctx) {
-    const bx = bb.offsetLeft, by = bb.offsetTop;
-    const bw = bb.offsetWidth, bh = bb.offsetHeight;
-    const opacity = parseFloat(bb.style.opacity||1);
+    const x = bb.offsetLeft, y = bb.offsetTop;
+    const w = bb.offsetWidth, h = bb.offsetHeight;
+    const opacity = parseFloat(bb.style.opacity || 1);
 
     ctx.save();
     ctx.globalAlpha = opacity;
 
     // 背景
-    ctx.fillStyle = '#1f6b5e';
-    ctx.fillRect(bx, by, bw, bh);
+    ctx.fillStyle = '#2d5a27';
+    ctx.fillRect(x, y, w, h);
+
+    // ラインテクスチャ
+    ctx.globalAlpha = opacity * 0.04;
+    for(let i = 0; i < h; i += 23) {
+      ctx.fillStyle = '#fff'; ctx.fillRect(x, y+i, w, 1);
+    }
+    ctx.globalAlpha = opacity;
 
     // 外枠
     ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5;
-    ctx.strokeRect(bx+1.25, by+1.25, bw-2.5, bh-2.5);
+    ctx.strokeRect(x+1.25, y+1.25, w-2.5, h-2.5);
 
-    const border = 2;      // 枠線幅
-    const labelW = 68;     // ラベル幅
-    const rowH = 32;       // 上部行高さ
-    const bottomH = 56;    // 施工者欄高さ
-    const mainH = bh - rowH*2 - bottomH; // 中央エリア高さ
+    // タイトル
+    const titleH = 22;
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.fillRect(x, y, w, titleH);
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(x, y+titleH); ctx.lineTo(x+w, y+titleH); ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.font = '600 10px "Noto Serif JP", serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('工　事　黒　板', x + w/2, y + titleH - 6);
 
-    // ── 工事名行 ──
-    let ry = by;
-    drawRow(ctx, bx, ry, bw, rowH, labelW, '工事名',
-      document.getElementById('f-work').textContent, 13, false);
+    // フィールドデータ
+    const companyName = getCompanyName();
+    const fields = [
+      { label:'作業項目', val: document.getElementById('f-work').textContent, big: true },
+      { label:'現場名',   val: document.getElementById('f-site').textContent, big: false },
+      { label:'施工業者名', val: companyName, big: false },
+      { label:'日　付',   val: document.getElementById('f-date').textContent, big: false },
+    ];
 
-    // ── 工事場所行 ──
-    ry += rowH;
-    drawRow(ctx, bx, ry, bw, rowH, labelW, '工事場所',
-      document.getElementById('f-site').textContent, 13, false);
+    let fy = y + titleH;
+    const labelW = 52;
+    const normalH = 28, bigH = 46;
 
-    // ── 中央大エリア ──
-    ry += rowH;
-    // 上区切り線
-    ctx.strokeStyle='#fff'; ctx.lineWidth=2;
-    ctx.beginPath(); ctx.moveTo(bx,ry); ctx.lineTo(bx+bw,ry); ctx.stroke();
+    fields.forEach(f => {
+      const rowH = f.big ? bigH : normalH;
 
-    const mainText = document.getElementById('f-main').textContent;
-    const dateText = document.getElementById('f-date').textContent;
-    const fontSize = Math.round(bw * 0.072);
+      // 行の背景（なし、緑のまま）
+      // 上の区切り線
+      ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(x, fy); ctx.lineTo(x+w, fy); ctx.stroke();
 
-    // メインテキスト
-    ctx.fillStyle='#fff';
-    ctx.font = `700 ${fontSize}px "Noto Sans JP",sans-serif`;
-    ctx.textAlign='center'; ctx.textBaseline='top';
-    ctx.fillText(mainText, bx+bw/2, ry+8);
+      // ラベル背景
+      ctx.fillStyle = 'rgba(0,0,0,0.2)';
+      ctx.fillRect(x, fy, labelW, rowH);
 
-    // 日付（テキスト直下・右寄せ）
-    const mainTextH = fontSize * 1.4 + 8;
-    ctx.font = `400 10px "Noto Sans JP",sans-serif`;
-    ctx.textAlign='right'; ctx.textBaseline='top';
-    ctx.fillText(dateText, bx+bw-8, ry+mainTextH+2);
+      // ラベル区切り線
+      ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(x+labelW, fy); ctx.lineTo(x+labelW, fy+rowH); ctx.stroke();
 
-    const mainH = mainTextH + 18; // テキスト高さ＋日付分＋余白最小
+      // ラベルテキスト
+      ctx.fillStyle = '#fff';
+      ctx.font = '700 8px "Noto Sans JP", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(f.label, x+labelW/2, fy+rowH/2+3);
 
-    // ── 施工者行 ──
-    ry += mainH;
-    ctx.strokeStyle='#fff'; ctx.lineWidth=2;
-    ctx.beginPath(); ctx.moveTo(bx,ry); ctx.lineTo(bx+bw,ry); ctx.stroke();
-    // ラベル背景
-    ctx.fillStyle='rgba(0,0,0,0.15)';
-    ctx.fillRect(bx, ry, labelW, bottomH);
-    // ラベル区切り線
-    ctx.strokeStyle='#fff'; ctx.lineWidth=2;
-    ctx.beginPath(); ctx.moveTo(bx+labelW,ry); ctx.lineTo(bx+labelW,ry+bottomH); ctx.stroke();
-    // ラベル文字
-    ctx.fillStyle='#fff';
-    ctx.font='700 11px "Noto Sans JP",sans-serif';
-    ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText('施工者', bx+labelW/2, ry+bottomH/2);
-    // 値
-    ctx.font='500 12px "Noto Sans JP",sans-serif';
-    ctx.textAlign='left'; ctx.textBaseline='middle';
-    ctx.fillText(getCompanyName(), bx+labelW+10, ry+bottomH/2);
+      // 値テキスト
+      ctx.font = f.big ? '500 11px "Noto Sans JP", sans-serif' : '500 9px "Noto Sans JP", sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(f.val, x+labelW+5, fy+rowH/2+3);
+
+      fy += rowH;
+    });
 
     ctx.restore();
   }
 
-  // 上部の行描画ヘルパー
-  function drawRow(ctx, x, y, w, h, labelW, label, val, valSize, topBorder) {
-    if(topBorder){
-      ctx.strokeStyle='#fff'; ctx.lineWidth=2;
-      ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+w,y); ctx.stroke();
-    }
-    // 下区切り線
-    ctx.strokeStyle='#fff'; ctx.lineWidth=2;
-    ctx.beginPath(); ctx.moveTo(x,y+h); ctx.lineTo(x+w,y+h); ctx.stroke();
-    // ラベル背景
-    ctx.fillStyle='rgba(0,0,0,0.15)';
-    ctx.fillRect(x, y, labelW, h);
-    // ラベル区切り
-    ctx.strokeStyle='#fff'; ctx.lineWidth=2;
-    ctx.beginPath(); ctx.moveTo(x+labelW,y); ctx.lineTo(x+labelW,y+h); ctx.stroke();
-    // ラベル文字
-    ctx.fillStyle='#fff';
-    ctx.font='700 11px "Noto Sans JP",sans-serif';
-    ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText(label, x+labelW/2, y+h/2);
-    // 値
-    ctx.font=`500 ${valSize}px "Noto Sans JP",sans-serif`;
-    ctx.textAlign='left'; ctx.textBaseline='middle';
-    ctx.fillText(val, x+labelW+10, y+h/2);
-  }
-
-  function closePreview(){
+  function closePreview() {
     document.getElementById('preview-overlay').classList.remove('show');
-    capturedDataUrl=null;
+    capturedDataUrl = null;
   }
 
-  function savePhoto(){
+  function savePhoto() {
     if(!capturedDataUrl) return;
-    const a=document.createElement('a');
-    const ts=new Date().toISOString().replace(/[:.]/g,'-').slice(0,19);
-    a.download=`現場写真_${ts}.jpg`;
-    a.href=capturedDataUrl; a.click();
+    const a = document.createElement('a');
+    const ts = new Date().toISOString().replace(/[:.]/g,'-').slice(0,19);
+    a.download = `現場写真_${ts}.jpg`;
+    a.href = capturedDataUrl;
+    a.click();
     closePreview();
   }
 </script>
